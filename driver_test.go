@@ -96,27 +96,6 @@ func TestQueryIntParam(t *testing.T) {
 	}
 }
 
-/* this fails, but java doesn't support numbers like this anyway...
-leaving it to try again later in case I figure more stuff out about value converters
-func TestLargeInt(t *testing.T) {
-	i := uint64(10000000000000000000)
-	stmt := prepareTest("return {big}")
-	rows, err := stmt.Query(i)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rows.Next()
-	var test uint64
-	err = rows.Scan(&test)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if test != i {
-		t.Fatal("test != i;", test)
-	}
-}
-*/
-
 // TODO array conversion
 /*
 func TestQuerySimpleIntArray(t *testing.T) {
