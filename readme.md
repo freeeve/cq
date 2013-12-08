@@ -71,6 +71,7 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * support for array parameters and results via ValueConverter
 * support for map parameters and results via ValueConverter
 * keepalive for transactions
+* way to do named parameters
 
 ## transactional API
 The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. If you don't want this behavior in a transaction, you can get the first results back from a `Query()`'s `Rows` using `.Next()`, which will force the execution of all outstanding queries. 
