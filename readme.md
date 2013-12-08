@@ -8,7 +8,7 @@ Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpai
 * [GonormCypher](https://github.com/marpaia/GonormCypher) (a port of AnormCypher)
 
 ## usage
-See the [excellent database/sql tutorial](http://go-database-sql.org/index.html) from VividCortex, as well as the [package documentation for database/sql](http://golang.org/pkg/database/sql/) for an introduction to the idiomatic go database access.
+See the [excellent database/sql tutorial](http://go-database-sql.org/index.html) from [VividCortex](https://vividcortex.com/), as well as the [package documentation for database/sql](http://golang.org/pkg/database/sql/) for an introduction to the idiomatic go database access.
 
 ## [minimal viable snippet](http://blog.fogus.me/2012/08/23/minimum-viable-snippet/)
 
