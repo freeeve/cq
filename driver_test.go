@@ -33,12 +33,6 @@ func prepareAndQuery(query string) *sql.Rows {
 	return rows
 }
 
-func failIfErr(err error, t *testing.T) {
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestQuerySimple(t *testing.T) {
 	rows := prepareAndQuery("return 1")
 	hasNext := rows.Next()
@@ -48,7 +42,9 @@ func TestQuerySimple(t *testing.T) {
 
 	var test int
 	err := rows.Scan(&test)
-	failIfErr(err, t)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if test != 1 {
 		t.Fatal("test != 1")
@@ -60,7 +56,9 @@ func TestQuerySimpleFloat(t *testing.T) {
 	rows.Next()
 	var test float64
 	err := rows.Scan(&test)
-	failIfErr(err, t)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if test != 1.2 {
 		t.Fatal("test != 1.2")
@@ -72,12 +70,52 @@ func TestQuerySimpleString(t *testing.T) {
 	rows.Next()
 	var test string
 	err := rows.Scan(&test)
-	failIfErr(err, t)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if test != "123" {
 		t.Fatal("test != '123'")
 	}
 }
+
+func TestQueryIntParam(t *testing.T) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(123)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows.Next()
+	var test int
+	err = rows.Scan(&test)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if test != 123 {
+		t.Fatal("test != 123;", test)
+	}
+}
+
+/* this fails, but java doesn't support numbers like this anyway...
+leaving it to try again later in case I figure more stuff out about value converters
+func TestLargeInt(t *testing.T) {
+	i := uint64(10000000000000000000)
+	stmt := prepareTest("return {big}")
+	rows, err := stmt.Query(i)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows.Next()
+	var test uint64
+	err = rows.Scan(&test)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if test != i {
+		t.Fatal("test != i;", test)
+	}
+}
+*/
 
 // TODO array conversion
 /*
@@ -86,7 +124,9 @@ func TestQuerySimpleIntArray(t *testing.T) {
 	rows.Next()
 	var test []int
 	err := rows.Scan(&test)
-	failIfErr(err, t)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if test[0] != 1 || test[1] != 2 || test[2] != 3 {
 		t.Fatal("test != [1,2,3];", test)

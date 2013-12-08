@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 type cypherStmt struct {
@@ -28,8 +30,12 @@ func (stmt *cypherStmt) NumInput() int {
 }
 
 type cypherResult struct {
-	Columns []string        `json:"columns"`
-	Data    [][]interface{} `json:"data"`
+	Columns         []string        `json:"columns"`
+	Data            [][]interface{} `json:"data"`
+	ErrorMessage    string          `json:"message"`
+	ErrorException  string          `json:"exception"`
+	ErrorFullname   string          `json:"fullname"`
+	ErrorStacktrace []string        `json:"stacktrace"`
 }
 
 type cypherRequest struct {
@@ -41,6 +47,13 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 	cyphReq := cypherRequest{
 		Query: stmt.query,
 	}
+	if len(args) > 0 {
+		cyphReq.Params = make(map[string]interface{})
+	}
+	for idx, e := range args {
+		cyphReq.Params[strconv.Itoa(idx)] = e
+	}
+
 	// TODO figure out how to use encoder for streaming here?
 	buf, err := json.Marshal(cyphReq)
 	if err != nil {
@@ -63,6 +76,9 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 	err = json.NewDecoder(res.Body).Decode(&cyphRes)
 	if err != nil {
 		return nil, err
+	}
+	if cyphRes.ErrorMessage != "" {
+		return nil, errors.New("Cypher error: " + cyphRes.ErrorMessage)
 	}
 	return &rows{stmt, &cyphRes, 0}, nil
 }
