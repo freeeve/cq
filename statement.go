@@ -14,7 +14,6 @@ import (
 const (
 	transactionNotStarted = iota
 	transactionStarted    = iota
-	transactionClosed     = iota
 )
 
 type cypherStmt struct {
@@ -145,20 +144,23 @@ func (tx *cypherTransaction) query(query string, args []driver.Value) {
 }
 
 func (tx *cypherTransaction) Commit() error {
-	// TODO commit
 	if tx.c.transactionState != transactionStarted {
 		return errTransactionNotStarted
 	}
+	// TODO commit
+
 	tx.c.transactionState = transactionNotStarted
 	tx.c.transaction = nil
+	tx.c = nil
 	return nil
 }
 
 func (tx *cypherTransaction) Rollback() error {
-	// TODO rollback
 	if tx.c.transactionState != transactionStarted {
 		return errTransactionNotStarted
 	}
+	// TODO rollback
+
 	tx.c.transactionState = transactionNotStarted
 	tx.c.transaction = nil
 	tx.c = nil
