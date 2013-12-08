@@ -30,11 +30,11 @@ func main() {
 	defer db.Close()
 
 	stmt, err := db.Prepare(`
-    match (n:User)-[:FOLLOWS]->(m:User) 
-    where n.screenName = {0} 
-    return m.screenName as friend
-    limit 10
-  `)
+		match (n:User)-[:FOLLOWS]->(m:User) 
+		where n.screenName = {0} 
+		return m.screenName as friend
+		limit 10
+	`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,4 +73,36 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * keepalive for transactions
 
 ## transactional API
-The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. If you don't want this behavior in a transaction, you can get the first results back from a `Rows` using `.Next()`, which will force the execution of all outstanding queries. 
+The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. If you don't want this behavior in a transaction, you can get the first results back from a `Query()`'s `Rows` using `.Next()`, which will force the execution of all outstanding queries. 
+
+#### transactional API example (planned)
+```go
+func main() {
+	db, err := sql.Open("neo4j-cypher", "http://localhost:7474")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	stmt, err := tx.Prepare("create (:User {screenName:{0}})")	
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	stmt.Exec("wefreema")
+	stmt.Exec("JnBrymn")
+	stmt.Exec("technige")
+	
+	err := tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+
