@@ -8,6 +8,13 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
+)
+
+const (
+	transactionNotStarted = iota
+	transactionStarted    = iota
+	transactionClosed     = iota
 )
 
 type cypherStmt struct {
@@ -21,7 +28,9 @@ func (stmt *cypherStmt) Close() error {
 }
 
 func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
-	return nil, errNotImplemented
+	stmt.Query(args)
+	// TODO add counts and error support
+	return nil, nil
 }
 
 func (stmt *cypherStmt) NumInput() int {
@@ -43,7 +52,15 @@ type cypherRequest struct {
 	Params map[string]interface{} `json:"params,omitempty"`
 }
 
+func setDefaultHeaders(req *http.Request) {
+	req.Header.Set("X-Stream", "true")
+	req.Header.Set("User-Agent", cqVersion)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+}
+
 func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
+	// TODO check if we're in a transaction and use it
 	cyphReq := cypherRequest{
 		Query: stmt.query,
 	}
@@ -64,10 +81,7 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("X-Stream", "true")
-	req.Header.Set("User-Agent", cqVersion)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
+	setDefaultHeaders(req)
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -106,5 +120,47 @@ func (rs *rows) Next(dest []driver.Value) error {
 		dest[i] = rs.result.Data[rs.pos][i]
 	}
 	rs.pos++
+	return nil
+}
+
+type cypherTransactionStatement struct {
+	Statement  string `json:"statement"`
+	Parameters map[string]interface{}
+}
+
+type cypherTransaction struct {
+	Statements     []cypherTransactionStatement `json:"statements"`
+	commitURL      string
+	transactionURL string
+	expiration     time.Time
+	c              *conn
+}
+
+func (tx *cypherTransaction) query(query string, args []driver.Value) {
+	stmt := cypherTransactionStatement{
+		Statement: query,
+		//	Parameters: args,
+	}
+	tx.Statements = append(tx.Statements, stmt)
+}
+
+func (tx *cypherTransaction) Commit() error {
+	// TODO commit
+	if tx.c.transactionState != transactionStarted {
+		return errTransactionNotStarted
+	}
+	tx.c.transactionState = transactionNotStarted
+	tx.c.transaction = nil
+	return nil
+}
+
+func (tx *cypherTransaction) Rollback() error {
+	// TODO rollback
+	if tx.c.transactionState != transactionStarted {
+		return errTransactionNotStarted
+	}
+	tx.c.transactionState = transactionNotStarted
+	tx.c.transaction = nil
+	tx.c = nil
 	return nil
 }

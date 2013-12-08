@@ -96,6 +96,35 @@ func TestQueryIntParam(t *testing.T) {
 	}
 }
 
+func TestTransactionRollback(t *testing.T) {
+	db := testConn()
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rows, err := tx.Query("return 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hasNext := rows.Next()
+	if !hasNext {
+		t.Fatal("no rows in transaction")
+	}
+
+	var test int
+	rows.Scan(&test)
+	if test != 1 {
+		t.Fatal("test != 1")
+	}
+
+	err = tx.Rollback()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TODO array conversion
 /*
 func TestQuerySimpleIntArray(t *testing.T) {

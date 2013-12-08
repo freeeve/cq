@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"net/http"
 )
 
@@ -23,9 +22,11 @@ var (
 )
 
 type conn struct {
-	baseURL        string
-	cypherURL      string
-	transactionURL string
+	baseURL          string
+	cypherURL        string
+	transactionURL   string
+	transaction      *cypherTransaction // for now going to support one transaction per connection
+	transactionState int
 }
 
 type Neo4jBase struct {
@@ -72,11 +73,20 @@ func Open(baseURL string) (driver.Conn, error) {
 }
 
 func (c conn) Begin() (driver.Tx, error) {
-	return nil, errors.New("transaction mode not supported yet")
+	if c.transactionURL == "" {
+		return nil, errTransactionsNotSupported
+	}
+	if c.transactionState == transactionStarted {
+		return nil, errTransactionStarted
+	}
+	c.transaction = &cypherTransaction{}
+	c.transactionState = transactionStarted
+	c.transaction.c = &c
+	return c.transaction, nil
 }
 
 func (c conn) Close() error {
-	// nothing needs done - connections aren't held open
+	// TODO check if in transaction and rollback
 	return nil
 }
 
