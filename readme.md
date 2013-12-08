@@ -1,4 +1,4 @@
-# cq - Cypher queries for database/sql in Go
+# cq - Cypher queries for database/sql
 A database/sql implementation for Cypher. Still in development, but surprisingly already usable. Library name subject to change. At the time of writing, this project is <2 days old.
 
 ## [minimal viable snippet](http://blog.fogus.me/2012/08/23/minimum-viable-snippet/)
