@@ -3,6 +3,10 @@ A database/sql implementation for Cypher. Still in development, but surprisingly
 
 Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpaia), and [Jason](https://github.com/jmcvetta) for the ideas/motivation to start on this project. Cypher is close enough to SQL that it seems to fit pretty well in the idiomatic database/sql implementation.
 
+#### Other Go drivers for Neo4j
+* [Neoism](https://github.com/jmcvetta/neoism) (a careful/complete REST API implementation)
+* [GonormCypher](https://github.com/marpaia/GonormCypher) (a port of AnormCypher)
+
 ## usage
 See the [excellent database/sql tutorial](http://go-database-sql.org/index.html) from VividCortex, as well as the [package documentation for database/sql](http://golang.org/pkg/database/sql/) for an introduction to the idiomatic go database access.
 
