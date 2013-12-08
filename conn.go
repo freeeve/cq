@@ -1,6 +1,7 @@
 package cq
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -8,6 +9,18 @@ import (
 )
 
 type CypherDriver struct{}
+
+func (d *CypherDriver) Open(name string) (driver.Conn, error) {
+	return Open(name)
+}
+
+func init() {
+	sql.Register("neo4j-cypher", &CypherDriver{})
+}
+
+var (
+	cqVersion = "0.1.0"
+)
 
 type conn struct {
 	baseURL        string

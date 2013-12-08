@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	errNotConnected = errors.New("Not Connected")
+	errNotConnected   = errors.New("Not Connected")
+	errNotImplemented = errors.New("Not Implemented")
 
 	errLog Logger = log.New(os.Stderr, "[Cypher] ", log.Ldate|log.Ltime|log.Lshortfile)
 )
