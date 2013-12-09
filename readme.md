@@ -78,8 +78,6 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 ## transactional API
 The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. If you don't want this behavior in a transaction, you can get the first results back from a `Query()`'s `Rows` using `.Next()`, which will force the execution of all outstanding queries. 
 
-Another caveat of the implementation planned is to support only one transaction active per connection--this idea may change, but it should be alright, because you can have multiple connections at the same time.
-
 #### transactional API example (planned)
 ```go
 func main() {
