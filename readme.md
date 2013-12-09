@@ -12,7 +12,7 @@ See the [excellent database/sql tutorial](http://go-database-sql.org/index.html)
 
 One key thing to mention that's slightly different, at least so far. For now, you can (and should) use parameters, but the placeholders must be numbers in sequence, e.g. `{0}`, `{1}`, `{2}`, and then you must put them in order in the calls to `Query`/`Exec`. I hope to overcome this at some point, but I haven't figured out a good way to represent Cypher's named parameters in the parameterized query feature of database/sql.
 
-## [minimal viable snippet](http://blog.fogus.me/2012/08/23/minimum-viable-snippet/)
+## [minimum viable snippet](http://blog.fogus.me/2012/08/23/minimum-viable-snippet/)
 
 ```go
 package main
