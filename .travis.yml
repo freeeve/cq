@@ -2,6 +2,9 @@ language: go
 go: 
   - 1.2
   
+env:
+  - NEO_VERSION="2.0.0"
+  
 after_success:
   - go get code.google.com/p/go.tools/cmd/cover
   - go get github.com/axw/gocov/gocov
@@ -10,6 +13,6 @@ after_success:
   - goveralls rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
   
 before_install:
-  - wget dist.neo4j.org/neo4j-community-2.0.0-unix.tar.gz
-  - tar -xzf neo4j-community-2.0.0-unix.tar.gz
-  - neo4j-community-2.0.0/bin/neo4j start
+  - wget dist.neo4j.org/neo4j-community-$NEO_VERSION-unix.tar.gz
+  - tar -xzf neo4j-community-$NEO_VERSION-unix.tar.gz
+  - neo4j-community-$NEO_VERSION/bin/neo4j start
