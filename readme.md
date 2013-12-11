@@ -1,5 +1,5 @@
 # cq - cypher queries for database/sql
-A database/sql implementation for Cypher. Still in development, but surprisingly already usable. Library name subject to change. At the time of writing, this project is <2 days old. 
+A database/sql implementation for Cypher. Still in development, but surprisingly already usable. 
 
 Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpaia), and [Jason](https://github.com/jmcvetta) for the ideas/motivation to start on this project. Cypher is close enough to SQL that it seems to fit pretty well in the idiomatic database/sql implementation.
 
