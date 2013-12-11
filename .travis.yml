@@ -2,6 +2,11 @@ language: go
 go: 
   - 1.2
   
+after_success:
+  - go get github.com/mattn/goveralls
+  - cd $GOPATH/src/github.com/wfreeman/cq
+  - goveralls rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
+  
 before_install:
   - wget dist.neo4j.org/neo4j-community-2.0.0-RC1-unix.tar.gz
   - tar -xzf neo4j-community-2.0.0-RC1-unix.tar.gz
