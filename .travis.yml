@@ -4,7 +4,8 @@ go:
   
 after_success:
   - go get github.com/mattn/goveralls
-  - $HOME/gopath/bin/goveralls rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
+  - export PATH=$PATH:$HOME/gopath/bin/
+  - goveralls rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
   
 before_install:
   - wget dist.neo4j.org/neo4j-community-2.0.0-RC1-unix.tar.gz
