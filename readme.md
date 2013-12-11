@@ -1,6 +1,8 @@
 # cq - cypher queries for database/sql
 A database/sql implementation for Cypher. Still in development, but surprisingly already usable. 
 
+[![Build Status](https://travis-ci.org/wfreeman/cq.png?branch=master)](https://travis-ci.org/wfreeman/cq)
+
 Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpaia), and [Jason](https://github.com/jmcvetta) for the ideas/motivation to start on this project. Cypher is close enough to SQL that it seems to fit pretty well in the idiomatic database/sql implementation.
 
 #### Other Go drivers for Neo4j that support Cypher
