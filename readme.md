@@ -111,4 +111,7 @@ func main() {
 }
 ```
 
+## license
+
+MIT license. See license file.
 
