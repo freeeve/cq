@@ -8,7 +8,7 @@ import (
 )
 
 func testConn() *sql.DB {
-	db, err := sql.Open("neo4j-cypher", "http://localhost:7474")
+	db, err := sql.Open("neo4j-cypher", "http://localhost:7474/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,6 +96,7 @@ func TestQueryIntParam(t *testing.T) {
 	}
 }
 
+/*
 func TestTransactionRollback(t *testing.T) {
 	db := testConn()
 	tx, err := db.Begin()
@@ -123,7 +124,7 @@ func TestTransactionRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
+}*/
 
 // TODO array conversion
 /*
