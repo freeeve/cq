@@ -2,11 +2,15 @@ package cq
 
 import (
 	"database/sql/driver"
+	"log"
 	"testing"
 )
 
 func prepareTest(query string) driver.Stmt {
 	db := openTest()
+	if db == nil {
+		log.Fatal("can't connect to test db: ", testURL)
+	}
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		errLog.Print(err)

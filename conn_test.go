@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	testURL = "http://localhost:7474"
+	testURL = "http://localhost:7474/"
 )
 
 func openTest() driver.Conn {
@@ -28,6 +28,9 @@ func TestOpen(t *testing.T) {
 
 func TestPrepareNoParams(t *testing.T) {
 	db := openTest()
+	if db == nil {
+		t.Fatal("can't connect to test db: ", testURL)
+	}
 	stmt, err := db.Prepare("match (n) return n limit 1")
 	if err != nil {
 		t.Fatal(err)

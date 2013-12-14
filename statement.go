@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -27,8 +28,17 @@ func (stmt *cypherStmt) Close() error {
 }
 
 func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
-	stmt.Query(args)
-	// TODO add counts and error support
+	if stmt.c.transactionState == transactionStarted {
+		//		errLog.Print("in transaction... queueing")
+		stmt.c.transaction.query(stmt.query, args)
+	} else {
+		//		errLog.Print("not in transaction... querying: ", stmt.c)
+		rows, err := stmt.Query(args)
+		defer rows.Close()
+		// TODO add counts and error support
+		return nil, err
+	}
+	// never hit
 	return nil, nil
 }
 
@@ -59,41 +69,47 @@ func setDefaultHeaders(req *http.Request) {
 }
 
 func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
-	// TODO check if we're in a transaction and use it
-	cyphReq := cypherRequest{
-		Query: stmt.query,
-	}
-	if len(args) > 0 {
-		cyphReq.Params = make(map[string]interface{})
-	}
-	for idx, e := range args {
-		cyphReq.Params[strconv.Itoa(idx)] = e
-	}
+	if stmt.c.transactionState == transactionStarted {
+		return nil, errors.New("transactions only support Exec")
+	} else {
+		// this only happens outside of a transaction
+		cyphReq := cypherRequest{
+			Query: stmt.query,
+		}
+		if len(args) > 0 {
+			cyphReq.Params = make(map[string]interface{})
+		}
+		for idx, e := range args {
+			cyphReq.Params[strconv.Itoa(idx)] = e
+		}
 
-	// TODO figure out how to use encoder for streaming here?
-	buf, err := json.Marshal(cyphReq)
-	if err != nil {
-		return nil, err
+		var buf bytes.Buffer
+		err := json.NewEncoder(&buf).Encode(cyphReq)
+		if err != nil {
+			return nil, err
+		}
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", stmt.c.cypherURL, &buf)
+		if err != nil {
+			return nil, err
+		}
+		setDefaultHeaders(req)
+		res, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		cyphRes := cypherResult{}
+		err = json.NewDecoder(res.Body).Decode(&cyphRes)
+		if err != nil {
+			return nil, err
+		}
+		if cyphRes.ErrorMessage != "" {
+			return nil, errors.New("Cypher error: " + cyphRes.ErrorMessage)
+		}
+		return &rows{stmt, &cyphRes, 0}, nil
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", stmt.c.cypherURL, bytes.NewReader(buf))
-	if err != nil {
-		return nil, err
-	}
-	setDefaultHeaders(req)
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	cyphRes := cypherResult{}
-	err = json.NewDecoder(res.Body).Decode(&cyphRes)
-	if err != nil {
-		return nil, err
-	}
-	if cyphRes.ErrorMessage != "" {
-		return nil, errors.New("Cypher error: " + cyphRes.ErrorMessage)
-	}
-	return &rows{stmt, &cyphRes, 0}, nil
+	// never hits
+	return nil, nil
 }
 
 type rows struct {
@@ -112,6 +128,7 @@ func (rs *rows) Columns() []string {
 }
 
 func (rs *rows) Next(dest []driver.Value) error {
+	// TODO handle transaction
 	if len(rs.result.Data) <= rs.pos {
 		return io.EOF
 	}
@@ -123,8 +140,8 @@ func (rs *rows) Next(dest []driver.Value) error {
 }
 
 type cypherTransactionStatement struct {
-	Statement  string `json:"statement"`
-	Parameters map[string]interface{}
+	Statement  string                 `json:"statement"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 type cypherTransaction struct {
@@ -133,25 +150,96 @@ type cypherTransaction struct {
 	transactionURL string
 	expiration     time.Time
 	c              *conn
+	rows           []*rows
 }
 
 func (tx *cypherTransaction) query(query string, args []driver.Value) {
+	//	errLog.Print("appending query", query)
 	stmt := cypherTransactionStatement{
-		Statement: query,
-		//	Parameters: args,
+		Statement:  query,
+		Parameters: make(map[string]interface{}, len(args)),
+	}
+	for idx, e := range args {
+		stmt.Parameters[strconv.Itoa(idx)] = e
 	}
 	tx.Statements = append(tx.Statements, stmt)
+	if len(tx.Statements) >= 100 {
+		err := tx.exec()
+		if err != nil {
+			errLog.Print(err)
+		}
+	}
 }
 
-func (tx *cypherTransaction) Commit() error {
+func (tx *cypherTransaction) exec() error {
 	if tx.c.transactionState != transactionStarted {
 		return errTransactionNotStarted
 	}
-	// TODO commit
+	//jsontx, _ := json.Marshal(tx)
+	//errLog.Print("executing a partial batch", string(jsontx))
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(tx)
+	if err != nil {
+		errLog.Print(err)
+		return err
+	}
+	req, err := http.NewRequest("POST", tx.transactionURL, &buf)
+	if err != nil {
+		errLog.Print(err)
+		return err
+	}
+	setDefaultHeaders(req)
+	client := &http.Client{}
+	res, err := client.Do(req)
+	commit := commitResponse{}
+	json.NewDecoder(res.Body).Decode(&commit)
+	tx.Statements = tx.Statements[:0]
+	if len(commit.Errors) > 0 {
+		return errors.New("exec errors: " + fmt.Sprintf("%q", commit))
+	}
+	if err != nil {
+		errLog.Print(err)
+		return err
+	}
+	return nil
+}
 
+type commitError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+type commitResponse struct {
+	Errors []commitError `json:"errors"`
+}
+
+func (tx *cypherTransaction) Commit() error {
+	//	errLog.Print("committing transaction:", tx)
+	if tx.c.transactionState != transactionStarted {
+		return errTransactionNotStarted
+	}
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(tx)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", tx.commitURL, &buf)
+	if err != nil {
+		return err
+	}
+	setDefaultHeaders(req)
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	commit := commitResponse{}
+	json.NewDecoder(res.Body).Decode(&commit)
+	if len(commit.Errors) > 0 {
+		return errors.New("commit errors: " + fmt.Sprintf("%q", commit))
+	}
 	tx.c.transactionState = transactionNotStarted
 	tx.c.transaction = nil
-	tx.c = nil
 	return nil
 }
 
@@ -159,10 +247,18 @@ func (tx *cypherTransaction) Rollback() error {
 	if tx.c.transactionState != transactionStarted {
 		return errTransactionNotStarted
 	}
-	// TODO rollback
+	//client := &http.Client{}
+	req, err := http.NewRequest("DELETE", tx.transactionURL, nil)
+	if err != nil {
+		return err
+	}
+	setDefaultHeaders(req)
+	//res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
 
 	tx.c.transactionState = transactionNotStarted
 	tx.c.transaction = nil
-	tx.c = nil
 	return nil
 }
