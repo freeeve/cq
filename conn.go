@@ -48,6 +48,7 @@ type Neo4jData struct {
 // add support for multiple hosts (cluster)
 func Open(baseURL string) (driver.Conn, error) {
 	resp, err := http.Get(baseURL)
+   defer resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +59,14 @@ func Open(baseURL string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	resp, err = http.Get(neo4jBase.Data)
+   resp2, err := http.Get(neo4jBase.Data)
+   defer resp2.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 
 	neo4jData := Neo4jData{}
-	err = json.NewDecoder(resp.Body).Decode(&neo4jData)
+	err = json.NewDecoder(resp2.Body).Decode(&neo4jData)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +100,7 @@ func (c *conn) Begin() (driver.Tx, error) {
 	}
 	setDefaultHeaders(req)
 	res, err := client.Do(req)
+   defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}

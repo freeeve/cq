@@ -7,37 +7,43 @@ import (
 
 func BenchmarkSimpleQuery(b *testing.B) {
 	stmt := prepareTest("return 1")
+	defer stmt.Close()
+	var test int
 	for i := 0; i < b.N; i++ {
 		rows, err := stmt.Query()
 		if err != nil {
 			log.Fatal(err)
 		}
-		var test int
 		rows.Scan(&test)
+		rows.Close()
 	}
 }
 
 func BenchmarkSimpleCreate(b *testing.B) {
 	stmt := prepareTest("create ()")
+	defer stmt.Close()
+	var test int
 	for i := 0; i < b.N; i++ {
 		rows, err := stmt.Query()
 		if err != nil {
 			log.Fatal(err)
 		}
-		var test int
 		rows.Scan(&test)
+		rows.Close()
 	}
 }
 
 func BenchmarkSimpleCreateLabel(b *testing.B) {
 	stmt := prepareTest("create (:Test)")
+	defer stmt.Close()
+	var test int
 	for i := 0; i < b.N; i++ {
 		rows, err := stmt.Query()
 		if err != nil {
 			log.Fatal(err)
 		}
-		var test int
 		rows.Scan(&test)
+		rows.Close()
 	}
 }
 
@@ -88,6 +94,7 @@ func transactionalSizeSimpleCreate(b *testing.B, size int) {
 				if err != nil {
 					log.Fatal(err)
 				}
+				stmt.Close()
 				stmt, err = tx.Prepare("create ({n:{0}})")
 				if err != nil {
 					log.Fatal(err)

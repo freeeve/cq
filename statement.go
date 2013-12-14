@@ -95,6 +95,7 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 		}
 		setDefaultHeaders(req)
 		res, err := client.Do(req)
+		defer res.Body.Close()
 		if err != nil {
 			return nil, err
 		}
@@ -191,6 +192,7 @@ func (tx *cypherTransaction) exec() error {
 	setDefaultHeaders(req)
 	client := &http.Client{}
 	res, err := client.Do(req)
+	defer res.Body.Close()
 	commit := commitResponse{}
 	json.NewDecoder(res.Body).Decode(&commit)
 	tx.Statements = tx.Statements[:0]
@@ -230,6 +232,7 @@ func (tx *cypherTransaction) Commit() error {
 	setDefaultHeaders(req)
 	client := &http.Client{}
 	res, err := client.Do(req)
+	defer res.Body.Close()
 	if err != nil {
 		return err
 	}
