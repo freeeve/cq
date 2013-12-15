@@ -70,7 +70,11 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * ~~`stmt.Exec()`~~
 * ~~`stmt.Query()`~~
 * ~~support for primitive parameters and results~~
-* `db.Begin()`
+* ~~`db.Begin()`~~
+* ~~`tx.Prepare()`~~
+* ~~transaction: `stmt.Prepare()`~~
+* ~~transaction: `stmt.Exec()`~~
+* transaction: `stmt.Query()`
 * `db.Exec()`
 * `db.Query()`
 * support for array parameters and results via ValueConverter
@@ -79,9 +83,9 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * way to do named parameters
 
 ## transactional API
-The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. If you don't want this behavior in a transaction, you can get the first results back from a `Query()`'s `Rows` using `.Next()`, which will force the execution of all outstanding queries. 
+The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. Currently only supports `stmt.Exec()` within a transaction, will work on supporting `stmt.Query()` next and queueing up results.
 
-#### transactional API example (planned)
+#### transactional API example
 ```go
 func main() {
 	db, err := sql.Open("neo4j-cypher", "http://localhost:7474")
@@ -109,6 +113,19 @@ func main() {
 		log.Fatal(err)
 	}
 }
+```
+
+#### transactional API benchmarks
+Able to get sustained times of 20k+ cypher statements per second, even with multiple nodes per create... on a 2011 vintage macbook.
+
+```
+(master ✓) wes-macbook:cq go test -bench=".*Transaction.*" -test.benchtime=10s
+PASS
+BenchmarkTransactional10SimpleCreate	  100000	    150630 ns/op
+BenchmarkTransactional100SimpleCreate	  500000	     39202 ns/op
+BenchmarkTransactional1000SimpleCreate	 1000000	     27320 ns/op
+BenchmarkTransactional10000SimpleCreate	  500000	     28524 ns/op
+ok  	github.com/wfreeman/cq	79.973s
 ```
 
 ## license
