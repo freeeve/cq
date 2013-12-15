@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,11 +20,11 @@ const (
 
 type cypherStmt struct {
 	c     *conn
-	query string
+	query *string
 }
 
 func (stmt *cypherStmt) Close() error {
-	stmt.query = ""
+	stmt.query = nil
 	return nil
 }
 
@@ -57,7 +58,7 @@ type cypherResult struct {
 }
 
 type cypherRequest struct {
-	Query  string                 `json:"query"`
+	Query  *string                `json:"query"`
 	Params map[string]interface{} `json:"params,omitempty"`
 }
 
@@ -88,7 +89,6 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 		if err != nil {
 			return nil, err
 		}
-		client := &http.Client{}
 		req, err := http.NewRequest("POST", stmt.c.cypherURL, &buf)
 		if err != nil {
 			return nil, err
@@ -101,6 +101,8 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 		}
 		cyphRes := cypherResult{}
 		err = json.NewDecoder(res.Body).Decode(&cyphRes)
+		io.Copy(ioutil.Discard, res.Body)
+		res.Body.Close()
 		if err != nil {
 			return nil, err
 		}
@@ -141,7 +143,7 @@ func (rs *rows) Next(dest []driver.Value) error {
 }
 
 type cypherTransactionStatement struct {
-	Statement  string                 `json:"statement"`
+	Statement  *string                `json:"statement"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
@@ -154,7 +156,7 @@ type cypherTransaction struct {
 	rows           []*rows
 }
 
-func (tx *cypherTransaction) query(query string, args []driver.Value) {
+func (tx *cypherTransaction) query(query *string, args []driver.Value) {
 	//	errLog.Print("appending query", query)
 	stmt := cypherTransactionStatement{
 		Statement:  query,
@@ -190,11 +192,14 @@ func (tx *cypherTransaction) exec() error {
 		return err
 	}
 	setDefaultHeaders(req)
-	client := &http.Client{}
 	res, err := client.Do(req)
-	defer res.Body.Close()
 	commit := commitResponse{}
 	json.NewDecoder(res.Body).Decode(&commit)
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
+	if err != nil {
+		return err
+	}
 	tx.Statements = tx.Statements[:0]
 	if len(commit.Errors) > 0 {
 		return errors.New("exec errors: " + fmt.Sprintf("%q", commit))
@@ -230,7 +235,6 @@ func (tx *cypherTransaction) Commit() error {
 		return err
 	}
 	setDefaultHeaders(req)
-	client := &http.Client{}
 	res, err := client.Do(req)
 	defer res.Body.Close()
 	if err != nil {
@@ -238,6 +242,11 @@ func (tx *cypherTransaction) Commit() error {
 	}
 	commit := commitResponse{}
 	json.NewDecoder(res.Body).Decode(&commit)
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
+	if err != nil {
+		return err
+	}
 	if len(commit.Errors) > 0 {
 		return errors.New("commit errors: " + fmt.Sprintf("%q", commit))
 	}
@@ -250,7 +259,6 @@ func (tx *cypherTransaction) Rollback() error {
 	if tx.c.transactionState != transactionStarted {
 		return errTransactionNotStarted
 	}
-	//client := &http.Client{}
 	req, err := http.NewRequest("DELETE", tx.transactionURL, nil)
 	if err != nil {
 		return err

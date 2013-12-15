@@ -6,6 +6,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"net/http"
+   "io"
+   "io/ioutil"
 )
 
 type CypherDriver struct{}
@@ -22,6 +24,10 @@ func init() {
 
 var (
 	cqVersion = "0.1.0"
+	tr        = &http.Transport{
+		DisableKeepAlives: true,
+	}
+	client = &http.Client{}
 )
 
 type conn struct {
@@ -47,26 +53,28 @@ type Neo4jData struct {
 // cache the results of this lookup
 // add support for multiple hosts (cluster)
 func Open(baseURL string) (driver.Conn, error) {
-	resp, err := http.Get(baseURL)
-   defer resp.Body.Close()
+	res, err := http.Get(baseURL)
 	if err != nil {
 		return nil, err
 	}
 
 	neo4jBase := Neo4jBase{}
-	err = json.NewDecoder(resp.Body).Decode(&neo4jBase)
+	err = json.NewDecoder(res.Body).Decode(&neo4jBase)
+   io.Copy(ioutil.Discard, res.Body)
+   res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 
-   resp2, err := http.Get(neo4jBase.Data)
-   defer resp2.Body.Close()
+	res, err = http.Get(neo4jBase.Data)
 	if err != nil {
 		return nil, err
 	}
 
 	neo4jData := Neo4jData{}
-	err = json.NewDecoder(resp2.Body).Decode(&neo4jData)
+	err = json.NewDecoder(res.Body).Decode(&neo4jData)
+   io.Copy(ioutil.Discard, res.Body)
+   res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +99,6 @@ func (c *conn) Begin() (driver.Tx, error) {
 		// this should not happen. probably delete this check (since a new connection will be allocated)
 		return nil, errTransactionStarted
 	}
-	client := &http.Client{}
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(cypherTransaction{})
 	req, err := http.NewRequest("POST", c.transactionURL, &buf)
@@ -100,12 +107,16 @@ func (c *conn) Begin() (driver.Tx, error) {
 	}
 	setDefaultHeaders(req)
 	res, err := client.Do(req)
-   defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 	transactionResponse := TransactionResponse{}
 	json.NewDecoder(res.Body).Decode(&transactionResponse)
+   io.Copy(ioutil.Discard, res.Body)
+   res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 	c.transaction = &cypherTransaction{
 		commitURL:      transactionResponse.Commit,
 		transactionURL: res.Header.Get("Location"),
@@ -129,7 +140,7 @@ func (c *conn) Prepare(query string) (driver.Stmt, error) {
 
 	stmt := &cypherStmt{
 		c:     c,
-		query: query,
+		query: &query,
 	}
 
 	return stmt, nil
