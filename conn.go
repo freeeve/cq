@@ -5,16 +5,16 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"net/http"
-   "io"
-   "io/ioutil"
 )
 
-type CypherDriver struct{}
+type cypherDriver struct{}
 
 var count int = 0
 
-func (d *CypherDriver) Open(name string) (driver.Conn, error) {
+func (d *cypherDriver) Open(name string) (driver.Conn, error) {
 	return Open(name)
 }
 
@@ -39,11 +39,11 @@ type conn struct {
 	id               int
 }
 
-type Neo4jBase struct {
+type neo4jBase struct {
 	Data string `json:"data"`
 }
 
-type Neo4jData struct {
+type neo4jData struct {
 	Cypher      string `json:"cypher"`
 	Transaction string `json:"transaction"`
 	Version     string `json:"neo4j_version"`
@@ -60,8 +60,8 @@ func Open(baseURL string) (driver.Conn, error) {
 
 	neo4jBase := Neo4jBase{}
 	err = json.NewDecoder(res.Body).Decode(&neo4jBase)
-   io.Copy(ioutil.Discard, res.Body)
-   res.Body.Close()
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -71,23 +71,23 @@ func Open(baseURL string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	neo4jData := Neo4jData{}
-	err = json.NewDecoder(res.Body).Decode(&neo4jData)
-   io.Copy(ioutil.Discard, res.Body)
-   res.Body.Close()
+	neoData := neo4jData{}
+	err = json.NewDecoder(res.Body).Decode(&neoData)
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 
 	count++
 	c := &conn{id: count}
-	c.cypherURL = neo4jData.Cypher
-	c.transactionURL = neo4jData.Transaction
+	c.cypherURL = neoData.Cypher
+	c.transactionURL = neoData.Transaction
 
 	return c, nil
 }
 
-type TransactionResponse struct {
+type transactionResponse struct {
 	Commit string `json:"commit"`
 }
 
@@ -110,15 +110,15 @@ func (c *conn) Begin() (driver.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	transactionResponse := TransactionResponse{}
-	json.NewDecoder(res.Body).Decode(&transactionResponse)
-   io.Copy(ioutil.Discard, res.Body)
-   res.Body.Close()
+	transResponse := transactionResponse{}
+	json.NewDecoder(res.Body).Decode(&transResponse)
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 	c.transaction = &cypherTransaction{
-		commitURL:      transactionResponse.Commit,
+		commitURL:      transResponse.Commit,
 		transactionURL: res.Header.Get("Location"),
 		c:              c,
 	}
