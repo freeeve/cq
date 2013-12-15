@@ -19,7 +19,7 @@ func (d *cypherDriver) Open(name string) (driver.Conn, error) {
 }
 
 func init() {
-	sql.Register("neo4j-cypher", &CypherDriver{})
+	sql.Register("neo4j-cypher", &cypherDriver{})
 }
 
 var (
@@ -58,15 +58,15 @@ func Open(baseURL string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	neo4jBase := Neo4jBase{}
-	err = json.NewDecoder(res.Body).Decode(&neo4jBase)
+	neoBase := neo4jBase{}
+	err = json.NewDecoder(res.Body).Decode(&neoBase)
 	io.Copy(ioutil.Discard, res.Body)
 	res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err = http.Get(neo4jBase.Data)
+	res, err = http.Get(neoBase.Data)
 	if err != nil {
 		return nil, err
 	}
