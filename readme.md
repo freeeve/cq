@@ -75,11 +75,9 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * ~~`tx.Prepare()`~~
 * ~~transaction: `stmt.Prepare()`~~
 * ~~transaction: `stmt.Exec()`~~
-* transaction: `stmt.Query()`
-* `db.Exec()`
-* `db.Query()`
 * support for array parameters and results via ValueConverter
 * support for map parameters and results via ValueConverter
+* transaction: `stmt.Query()`
 * keepalive for transactions
 * way to do named parameters
 
