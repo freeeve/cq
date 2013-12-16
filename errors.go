@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	errNotConnected             = errors.New("not connected")
-	errNotImplemented           = errors.New("not implemented")
-	errTransactionsNotSupported = errors.New("transactions aren't supported by your Neo4j version")
+	errNotConnected             = errors.New("cq: not connected")
+	errNotImplemented           = errors.New("cq: not implemented")
+	errTransactionsNotSupported = errors.New("cq: transactions aren't supported by your Neo4j version")
 )
