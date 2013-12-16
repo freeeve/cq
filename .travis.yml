@@ -4,6 +4,9 @@ go:
   
 env:
   - NEO_VERSION="2.0.0"
+
+before_script:
+  - go get launchpad.net/gocheck
   
 after_success:
   - go get code.google.com/p/go.tools/cmd/cover
