@@ -3,6 +3,7 @@ A database/sql implementation for Cypher. Still in development, but surprisingly
 
 [![Build Status](https://travis-ci.org/wfreeman/cq.png?branch=master)](https://travis-ci.org/wfreeman/cq)
 [![Coverage Status](https://coveralls.io/repos/wfreeman/cq/badge.png?branch=HEAD)](https://coveralls.io/r/wfreeman/cq?branch=HEAD)
+[![Codebot](https://codebot.io/badge/github.com/wfreeman/cq.png)](http://codebot.io/doc/pkg/github.com/wfreeman/cq "Codebot")
 
 Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpaia), and [Jason](https://github.com/jmcvetta) for the ideas/motivation to start on this project. Cypher is close enough to SQL that it seems to fit pretty well in the idiomatic database/sql implementation.
 
