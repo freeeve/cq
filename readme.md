@@ -78,7 +78,7 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * ~~keepalive for transactions~~
 * support for array parameters and results via ValueConverter
 * support for map parameters and results via ValueConverter
-* transaction: `stmt.Query()`
+* tx: `stmt.Query()`
 * way to do named parameters
 
 ## transactional API
