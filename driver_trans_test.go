@@ -1,0 +1,119 @@
+package cq_test
+
+import (
+	_ "github.com/wfreeman/cq"
+	. "launchpad.net/gocheck"
+	"log"
+	"testing"
+)
+
+func Test(t *testing.T) {
+	TestingT(t)
+}
+
+type TransactionSuite struct{}
+
+var _ = Suite(&TransactionSuite{})
+
+func (s *TransactionSuite) TearDownTest(c *C) {
+	db := testConn()
+	_, err := db.Exec("match (n:`TestRollback~~~~`) delete n")
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec("match (n:`TestCommit~~~~`) delete n")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// This file is meant to hold integration tests where cq must be imported as _
+// and is for testing transactions. Some of these are going to be long tests...
+func (s *TransactionSuite) TestTransactionRollback1(c *C) {
+	testTransactionRollbackN(c, 1)
+}
+func (s *TransactionSuite) TestTransactionRollback7(c *C) {
+	testTransactionRollbackN(c, 7)
+}
+func (s *TransactionSuite) TestTransactionRollback100(c *C) {
+	testTransactionRollbackN(c, 100)
+}
+func (s *TransactionSuite) TestTransactionRollback1000(c *C) {
+	testTransactionRollbackN(c, 1000)
+}
+func (s *TransactionSuite) TestTransactionRollback7777(c *C) {
+	testTransactionRollbackN(c, 7777)
+}
+
+func testTransactionRollbackN(c *C, n int) {
+	db := testConn()
+	tx, err := db.Begin()
+	c.Assert(err, IsNil)
+
+	for i := 0; i < n; i++ {
+		_, err := tx.Exec("create (:`TestRollback~~~~`)")
+		c.Assert(err, IsNil)
+	}
+
+	err = tx.Rollback()
+	c.Assert(err, IsNil)
+
+	rows, err := db.Query("match (n:`TestRollback~~~~`) return count(1)")
+	c.Assert(err, IsNil)
+	defer rows.Close()
+
+	rows.Next()
+
+	var count int
+	err = rows.Scan(&count)
+	c.Assert(err, IsNil)
+
+	if count > 0 {
+		c.Fatal("rollback doesn't work")
+	}
+}
+
+func (s *TransactionSuite) TestTransactionExecCommit1(c *C) {
+	testTransactionExecCommitN(c, 1)
+}
+func (s *TransactionSuite) TestTransactionExecCommit77(c *C) {
+	testTransactionExecCommitN(c, 77)
+}
+func (s *TransactionSuite) TestTransactionExecCommit100(c *C) {
+	testTransactionExecCommitN(c, 100)
+}
+func (s *TransactionSuite) TestTransactionExecCommit1000(c *C) {
+	testTransactionExecCommitN(c, 1000)
+}
+func (s *TransactionSuite) TestTransactionExecCommit7777(c *C) {
+	testTransactionExecCommitN(c, 7777)
+}
+
+func testTransactionExecCommitN(c *C, n int) {
+	db := testConn()
+	tx, err := db.Begin()
+	c.Assert(err, IsNil)
+
+	for i := 0; i < n; i++ {
+		_, err := tx.Exec("create (:`TestCommit~~~~` {id:{0}})", i)
+		c.Assert(err, IsNil)
+	}
+
+	err = tx.Commit()
+	c.Assert(err, IsNil)
+
+	rows, err := db.Query("match (n:`TestCommit~~~~`) return n.id order by n.id")
+	c.Assert(err, IsNil)
+	defer rows.Close()
+
+	var count int
+	var i int
+	for rows.Next() {
+		if i > n {
+			c.Fatal("i shouldn't be > n")
+		}
+		err = rows.Scan(&count)
+		c.Assert(err, IsNil)
+		i++
+	}
+}

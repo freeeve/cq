@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+// This file is meant to hold integration tests where cq must be imported as _
+
 func testConn() *sql.DB {
 	db, err := sql.Open("neo4j-cypher", "http://127.0.0.1:7474/")
 	if err != nil {
@@ -115,84 +117,6 @@ func TestQueryIntParam(t *testing.T) {
 	}
 	if test != 123 {
 		t.Fatal("test != 123;", test)
-	}
-}
-
-func TestTransactionRollback(t *testing.T) {
-	db := testConn()
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	res, err := tx.Exec("create (:`TestRollback~~~~`)")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if res == nil {
-		t.Fatal("res is nil")
-	}
-
-	err = tx.Rollback()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rows, err := db.Query("match (n:`TestRollback~~~~`) return count(1)")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer rows.Close()
-
-	rows.Next()
-
-	var count int
-	err = rows.Scan(&count)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if count > 0 {
-		t.Fatal("rollback doesn't work")
-	}
-}
-
-func TestTransactionRollback1000(t *testing.T) {
-	db := testConn()
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for i := 0; i < 1000; i++ {
-		_, err := tx.Exec("create (:`TestRollback~~~~`)")
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err = tx.Rollback()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rows, err := db.Query("match (n:`TestRollback~~~~`) return count(1)")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer rows.Close()
-
-	rows.Next()
-
-	var count int
-	err = rows.Scan(&count)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if count > 0 {
-		t.Fatal("rollback doesn't work")
 	}
 }
 
