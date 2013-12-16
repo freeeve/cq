@@ -13,7 +13,7 @@ func prepareTest(query string) driver.Stmt {
 	}
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		errLog.Print(err)
+		log.Print(err)
 	}
 	return stmt
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -98,12 +99,12 @@ func (tx *cypherTransaction) exec() error {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(tx)
 	if err != nil {
-		errLog.Print(err)
+		log.Print(err)
 		return err
 	}
 	req, err := http.NewRequest("POST", tx.transactionURL, &buf)
 	if err != nil {
-		errLog.Print(err)
+		log.Print(err)
 		return err
 	}
 	setDefaultHeaders(req)
@@ -120,7 +121,7 @@ func (tx *cypherTransaction) exec() error {
 		return errors.New("exec errors: " + fmt.Sprintf("%q", commit))
 	}
 	if err != nil {
-		errLog.Print(err)
+		log.Print(err)
 		return err
 	}
 	return nil
