@@ -118,7 +118,6 @@ func TestQueryIntParam(t *testing.T) {
 	}
 }
 
-/*
 func TestTransactionRollback(t *testing.T) {
 	db := testConn()
 	tx, err := db.Begin()
@@ -126,31 +125,79 @@ func TestTransactionRollback(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rows, err := tx.Query("return 1")
+	res, err := tx.Exec("create (:`TestRollback~~~~`)")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hasNext := rows.Next()
-	if !hasNext {
-		t.Fatal("no rows in transaction")
-	}
-
-	var test int
-	rows.Scan(&test)
-	if test != 1 {
-		t.Fatal("test != 1")
+	if res == nil {
+		t.Fatal("res is nil")
 	}
 
 	err = tx.Rollback()
 	if err != nil {
 		t.Fatal(err)
 	}
-}*/
 
-// TODO array conversion
-/*
+	rows, err := db.Query("match (n:`TestRollback~~~~`) return count(1)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+
+	rows.Next()
+
+	var count int
+	err = rows.Scan(&count)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if count > 0 {
+		t.Fatal("rollback doesn't work")
+	}
+}
+
+func TestTransactionRollback1000(t *testing.T) {
+	db := testConn()
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i := 0; i < 1000; i++ {
+		_, err := tx.Exec("create (:`TestRollback~~~~`)")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	err = tx.Rollback()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rows, err := db.Query("match (n:`TestRollback~~~~`) return count(1)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+
+	rows.Next()
+
+	var count int
+	err = rows.Scan(&count)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if count > 0 {
+		t.Fatal("rollback doesn't work")
+	}
+}
+
 func TestQuerySimpleIntArray(t *testing.T) {
+	t.Skip("can't convert to arrays yet")
 	rows := prepareAndQuery("return [1,2,3]")
 	rows.Next()
 	var test []int
@@ -162,4 +209,4 @@ func TestQuerySimpleIntArray(t *testing.T) {
 	if test[0] != 1 || test[1] != 2 || test[2] != 3 {
 		t.Fatal("test != [1,2,3];", test)
 	}
-} */
+}
