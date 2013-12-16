@@ -23,7 +23,8 @@ type transactionResponse struct {
 	Transaction struct {
 		Expires string
 	}
-	Errors []commitError `json:"errors"`
+	Errors   []commitError `json:"errors"`
+	location string
 }
 
 type cypherTransactionStatement struct {
@@ -54,21 +55,7 @@ func (c *conn) Begin() (driver.Tx, error) {
 	if c.transactionURL == "" {
 		return nil, errTransactionsNotSupported
 	}
-	var buf bytes.Buffer
-	json.NewEncoder(&buf).Encode(cypherTransaction{})
-	req, err := http.NewRequest("POST", c.transactionURL, &buf)
-	if err != nil {
-		return nil, err
-	}
-	setDefaultHeaders(req)
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	transResponse := transactionResponse{}
-	json.NewDecoder(res.Body).Decode(&transResponse)
-	io.Copy(ioutil.Discard, res.Body)
-	res.Body.Close()
+	transResponse, err := getTransactionResponse(c.transactionURL, cypherTransaction{})
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +66,7 @@ func (c *conn) Begin() (driver.Tx, error) {
 	}
 	c.transaction = &cypherTransaction{
 		commitURL:      transResponse.Commit,
-		transactionURL: res.Header.Get("Location"),
+		transactionURL: transResponse.location,
 		c:              c,
 		expiration:     exp,
 	}
@@ -103,24 +90,10 @@ func (tx *cypherTransaction) query(query *string, args []driver.Value) error {
 }
 
 func (tx *cypherTransaction) exec() error {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(tx)
+	trans, err := getTransactionResponse(tx.transactionURL, *tx)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("POST", tx.transactionURL, &buf)
-	if err != nil {
-		return err
-	}
-	setDefaultHeaders(req)
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	trans := transactionResponse{}
-	json.NewDecoder(res.Body).Decode(&trans)
-	io.Copy(ioutil.Discard, res.Body)
-	res.Body.Close()
 
 	tx.expiration, err = time.Parse(time.RFC1123Z, trans.Transaction.Expires)
 	if err != nil {
@@ -201,37 +174,44 @@ func (tx *cypherTransaction) Rollback() error {
 	return nil
 }
 
+func getTransactionResponse(url string, cypherTransReq cypherTransaction) (*transactionResponse, error) {
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(cypherTransReq)
+	req, err := http.NewRequest("POST", url, &buf)
+	if err != nil {
+		return nil, err
+	}
+	setDefaultHeaders(req)
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	transResponse := transactionResponse{}
+	json.NewDecoder(res.Body).Decode(&transResponse)
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
+	transResponse.location = res.Header.Get("Location")
+	return &transResponse, nil
+}
+
 func (tx *cypherTransaction) updateKeepAlive() {
 	if tx.keepAlive != nil {
 		tx.keepAlive.Stop()
 	}
 	dur := -1 * time.Since(tx.expiration)
 	if dur <= 1*time.Second {
-		dur = 500 * time.Millisecond
+		dur = 300 * time.Millisecond
 	}
 	tx.keepAlive = time.AfterFunc(dur, func() { sendKeepAlive(tx.transactionURL) })
 }
 
 func sendKeepAlive(txURL string) {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(cypherTransaction{
-		Statements: []cypherTransactionStatement{},
-	})
+	//log.Println("sending keepalive")
+	trans, err := getTransactionResponse(txURL, cypherTransaction{Statements: []cypherTransactionStatement{}})
 	if err != nil {
-		log.Print(err)
+		//log.Println(trans)
+		return
 	}
-	req, err := http.NewRequest("POST", txURL, &buf)
-	if err != nil {
-		log.Print(err)
-	}
-	setDefaultHeaders(req)
-	res, err := client.Do(req)
-	if err != nil {
-	}
-	trans := transactionResponse{}
-	json.NewDecoder(res.Body).Decode(&trans)
-	io.Copy(ioutil.Discard, res.Body)
-	res.Body.Close()
 	if len(trans.Errors) > 0 {
 		//log.Println(trans)
 		return
