@@ -11,14 +11,12 @@ var (
 	errNotImplemented           = errors.New("not implemented")
 	errTransactionsNotSupported = errors.New("transactions aren't supported by your Neo4j version")
 
-	errLog Logger = log.New(os.Stderr, "[Cypher] ", log.Ldate|log.Ltime|log.Lshortfile)
+	errLog = log.New(os.Stderr, "[Cypher] ", log.Ldate|log.Ltime|log.Lshortfile)
 )
 
-type Logger interface {
-	Print(v ...interface{})
-}
-
-func SetLogger(logger Logger) error {
+// SetLogger allows users to set the logger used for errors from cq.
+// It returns an error only when the logger is nil.
+func SetLogger(logger *log.Logger) error {
 	if logger == nil {
 		return errors.New("logger is nil")
 	}
