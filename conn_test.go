@@ -39,3 +39,13 @@ func TestPrepareNoParams(t *testing.T) {
 		t.Fatal("statement shouldn't be nil")
 	}
 }
+
+func TestBadURL(t *testing.T) {
+	db, err := Open("")
+	if err == nil {
+		t.Fatal("err was nil!")
+	}
+	if db != nil {
+		t.Fatal("db should be nil:", db)
+	}
+}
