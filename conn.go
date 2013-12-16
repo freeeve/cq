@@ -1,7 +1,6 @@
 package cq
 
 import (
-	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
@@ -11,8 +10,6 @@ import (
 )
 
 type cypherDriver struct{}
-
-var count int = 0
 
 func (d *cypherDriver) Open(name string) (driver.Conn, error) {
 	return Open(name)
@@ -34,9 +31,8 @@ type conn struct {
 	baseURL          string
 	cypherURL        string
 	transactionURL   string
-	transaction      *cypherTransaction // for now going to support one transaction per connection
+	transaction      *cypherTransaction
 	transactionState int
-	id               int
 }
 
 type neo4jBase struct {
@@ -79,48 +75,11 @@ func Open(baseURL string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	count++
-	c := &conn{id: count}
+	c := &conn{}
 	c.cypherURL = neoData.Cypher
 	c.transactionURL = neoData.Transaction
 
 	return c, nil
-}
-
-type transactionResponse struct {
-	Commit string `json:"commit"`
-}
-
-func (c *conn) Begin() (driver.Tx, error) {
-	if c.transactionURL == "" {
-		return nil, errTransactionsNotSupported
-	}
-	var buf bytes.Buffer
-	json.NewEncoder(&buf).Encode(cypherTransaction{})
-	req, err := http.NewRequest("POST", c.transactionURL, &buf)
-	if err != nil {
-		return nil, err
-	}
-	setDefaultHeaders(req)
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	transResponse := transactionResponse{}
-	json.NewDecoder(res.Body).Decode(&transResponse)
-	io.Copy(ioutil.Discard, res.Body)
-	res.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-	c.transaction = &cypherTransaction{
-		commitURL:      transResponse.Commit,
-		transactionURL: res.Header.Get("Location"),
-		c:              c,
-	}
-	c.transactionState = transactionStarted
-	//	errLog.Print("transaction successfully started:", c, c.transaction)
-	return c.transaction, nil
 }
 
 func (c *conn) Close() error {
