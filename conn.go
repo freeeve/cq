@@ -95,10 +95,6 @@ func (c *conn) Begin() (driver.Tx, error) {
 	if c.transactionURL == "" {
 		return nil, errTransactionsNotSupported
 	}
-	if c.transactionState == transactionStarted {
-		// this should not happen. probably delete this check (since a new connection will be allocated)
-		return nil, errTransactionStarted
-	}
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(cypherTransaction{})
 	req, err := http.NewRequest("POST", c.transactionURL, &buf)

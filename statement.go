@@ -30,10 +30,8 @@ func (stmt *cypherStmt) Close() error {
 
 func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
 	if stmt.c.transactionState == transactionStarted {
-		//		errLog.Print("in transaction... queueing")
 		stmt.c.transaction.query(stmt.query, args)
 	} else {
-		//		errLog.Print("not in transaction... querying: ", stmt.c)
 		rows, err := stmt.Query(args)
 		defer rows.Close()
 		// TODO add counts and error support
@@ -175,11 +173,6 @@ func (tx *cypherTransaction) query(query *string, args []driver.Value) {
 }
 
 func (tx *cypherTransaction) exec() error {
-	if tx.c.transactionState != transactionStarted {
-		return errTransactionNotStarted
-	}
-	//jsontx, _ := json.Marshal(tx)
-	//errLog.Print("executing a partial batch", string(jsontx))
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(tx)
 	if err != nil {
@@ -221,10 +214,6 @@ type commitResponse struct {
 }
 
 func (tx *cypherTransaction) Commit() error {
-	//	errLog.Print("committing transaction:", tx)
-	if tx.c.transactionState != transactionStarted {
-		return errTransactionNotStarted
-	}
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(tx)
 	if err != nil {
@@ -256,9 +245,6 @@ func (tx *cypherTransaction) Commit() error {
 }
 
 func (tx *cypherTransaction) Rollback() error {
-	if tx.c.transactionState != transactionStarted {
-		return errTransactionNotStarted
-	}
 	req, err := http.NewRequest("DELETE", tx.transactionURL, nil)
 	if err != nil {
 		return err
