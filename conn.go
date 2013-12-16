@@ -29,11 +29,10 @@ var (
 )
 
 type conn struct {
-	baseURL          string
-	cypherURL        string
-	transactionURL   string
-	transaction      *cypherTransaction
-	transactionState int
+	baseURL        string
+	cypherURL      string
+	transactionURL string
+	transaction    *cypherTransaction
 }
 
 type neo4jBase struct {

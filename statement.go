@@ -42,7 +42,7 @@ func (stmt *cypherStmt) Close() error {
 }
 
 func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
-	if stmt.c.transactionState == transactionStarted {
+	if stmt.c.transaction != nil {
 		err := stmt.c.transaction.query(stmt.query, args)
 		// TODO add counts and error support
 		return nil, err
@@ -58,7 +58,7 @@ func (stmt *cypherStmt) NumInput() int {
 }
 
 func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
-	if stmt.c.transactionState == transactionStarted {
+	if stmt.c.transaction != nil {
 		return nil, errors.New("transactions only support Exec")
 	}
 	// this only happens outside of a transaction

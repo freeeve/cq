@@ -5,7 +5,11 @@ import (
 	. "launchpad.net/gocheck"
 	"log"
 	"testing"
+	"time"
 )
+
+// This file is meant to hold integration tests where cq must be imported as _
+// and is for testing transactions. Some of these are going to be long tests...
 
 func Test(t *testing.T) {
 	TestingT(t)
@@ -15,7 +19,7 @@ type TransactionSuite struct{}
 
 var _ = Suite(&TransactionSuite{})
 
-func (s *TransactionSuite) TearDownTest(c *C) {
+func clearTestRecords() {
 	db := testConn()
 	_, err := db.Exec("match (n:`TestRollback~~~~`) delete n")
 	if err != nil {
@@ -27,8 +31,14 @@ func (s *TransactionSuite) TearDownTest(c *C) {
 	}
 }
 
-// This file is meant to hold integration tests where cq must be imported as _
-// and is for testing transactions. Some of these are going to be long tests...
+func (s *TransactionSuite) SetUpTest(c *C) {
+	clearTestRecords()
+}
+
+func (s *TransactionSuite) TearDownTest(c *C) {
+	clearTestRecords()
+}
+
 func (s *TransactionSuite) TestTransactionRollback1(c *C) {
 	testTransactionRollbackN(c, 1)
 }
@@ -74,22 +84,25 @@ func testTransactionRollbackN(c *C, n int) {
 }
 
 func (s *TransactionSuite) TestTransactionExecCommit1(c *C) {
-	testTransactionExecCommitN(c, 1)
+	testTransactionExecCommitN(c, 1, 0)
 }
 func (s *TransactionSuite) TestTransactionExecCommit77(c *C) {
-	testTransactionExecCommitN(c, 77)
+	testTransactionExecCommitN(c, 77, 0)
 }
 func (s *TransactionSuite) TestTransactionExecCommit100(c *C) {
-	testTransactionExecCommitN(c, 100)
+	testTransactionExecCommitN(c, 100, 0)
 }
 func (s *TransactionSuite) TestTransactionExecCommit1000(c *C) {
-	testTransactionExecCommitN(c, 1000)
+	testTransactionExecCommitN(c, 1000, 0)
 }
 func (s *TransactionSuite) TestTransactionExecCommit7777(c *C) {
-	testTransactionExecCommitN(c, 7777)
+	testTransactionExecCommitN(c, 7777, 0)
+}
+func (s *TransactionSuite) TestTransactionExecCommit1Rec2Secs(c *C) {
+	testTransactionExecCommitN(c, 1, 2*time.Second)
 }
 
-func testTransactionExecCommitN(c *C, n int) {
+func testTransactionExecCommitN(c *C, n int, delay time.Duration) {
 	db := testConn()
 	tx, err := db.Begin()
 	c.Assert(err, IsNil)
@@ -98,6 +111,8 @@ func testTransactionExecCommitN(c *C, n int) {
 		_, err := tx.Exec("create (:`TestCommit~~~~` {id:{0}})", i)
 		c.Assert(err, IsNil)
 	}
+
+	time.Sleep(delay)
 
 	err = tx.Commit()
 	c.Assert(err, IsNil)
@@ -116,4 +131,5 @@ func testTransactionExecCommitN(c *C, n int) {
 		c.Assert(err, IsNil)
 		i++
 	}
+	c.Assert(i, Equals, n)
 }
