@@ -133,3 +133,24 @@ func testTransactionExecCommitN(c *C, n int, delay time.Duration) {
 	}
 	c.Assert(i, Equals, n)
 }
+
+func (s *TransactionSuite) TestTxBadCypherError(c *C) {
+	db := testConn()
+	tx, err := db.Begin()
+	c.Assert(err, IsNil)
+
+	for i := 0; i < 1000; i++ {
+		_, err := tx.Exec("create (:`TestCommit~~~~` {id:{0}})")
+		if i%100 != 99 {
+			c.Assert(err, IsNil)
+		} else {
+			if err == nil {
+				c.Fatal(err)
+			}
+		}
+	}
+	err = tx.Commit()
+	if err == nil {
+		c.Fatal(err)
+	}
+}
