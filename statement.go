@@ -11,32 +11,15 @@ import (
 	"strconv"
 )
 
+type rows struct {
+	stmt   *cypherStmt
+	result *cypherResult
+	pos    int
+}
+
 type cypherStmt struct {
 	c     *conn
 	query *string
-}
-
-func (stmt *cypherStmt) Close() error {
-	stmt.query = nil
-	return nil
-}
-
-func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
-	if stmt.c.transactionState == transactionStarted {
-		stmt.c.transaction.query(stmt.query, args)
-	} else {
-		rows, err := stmt.Query(args)
-		defer rows.Close()
-		// TODO add counts and error support
-		return nil, err
-	}
-	// never hit
-	return nil, nil
-}
-
-func (stmt *cypherStmt) NumInput() int {
-	// TODO maybe parse query to give a real number
-	return -1 // avoid sanity check
 }
 
 type cypherResult struct {
@@ -53,11 +36,25 @@ type cypherRequest struct {
 	Params map[string]interface{} `json:"params,omitempty"`
 }
 
-func setDefaultHeaders(req *http.Request) {
-	req.Header.Set("X-Stream", "true")
-	req.Header.Set("User-Agent", cqVersion)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
+func (stmt *cypherStmt) Close() error {
+	stmt.query = nil
+	return nil
+}
+
+func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
+	if stmt.c.transactionState == transactionStarted {
+		err := stmt.c.transaction.query(stmt.query, args)
+		// TODO add counts and error support
+		return nil, err
+	}
+	rows, err := stmt.Query(args)
+	defer rows.Close()
+	// TODO add counts and error support
+	return nil, err
+}
+
+func (stmt *cypherStmt) NumInput() int {
+	return -1 // avoid sanity check
 }
 
 func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
@@ -104,12 +101,6 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 	}
 	// never hits
 	return nil, nil
-}
-
-type rows struct {
-	stmt   *cypherStmt
-	result *cypherResult
-	pos    int
 }
 
 func (rs *rows) Close() error {

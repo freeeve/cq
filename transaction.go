@@ -22,6 +22,29 @@ type transactionResponse struct {
 	Commit string `json:"commit"`
 }
 
+type cypherTransactionStatement struct {
+	Statement  *string                `json:"statement"`
+	Parameters map[string]interface{} `json:"parameters"`
+}
+
+type cypherTransaction struct {
+	Statements     []cypherTransactionStatement `json:"statements"`
+	commitURL      string
+	transactionURL string
+	expiration     time.Time
+	c              *conn
+	rows           []*rows
+}
+
+type commitError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+type commitResponse struct {
+	Errors []commitError `json:"errors"`
+}
+
 func (c *conn) Begin() (driver.Tx, error) {
 	if c.transactionURL == "" {
 		return nil, errTransactionsNotSupported
@@ -50,26 +73,10 @@ func (c *conn) Begin() (driver.Tx, error) {
 		c:              c,
 	}
 	c.transactionState = transactionStarted
-	//	errLog.Print("transaction successfully started:", c, c.transaction)
 	return c.transaction, nil
 }
 
-type cypherTransactionStatement struct {
-	Statement  *string                `json:"statement"`
-	Parameters map[string]interface{} `json:"parameters"`
-}
-
-type cypherTransaction struct {
-	Statements     []cypherTransactionStatement `json:"statements"`
-	commitURL      string
-	transactionURL string
-	expiration     time.Time
-	c              *conn
-	rows           []*rows
-}
-
-func (tx *cypherTransaction) query(query *string, args []driver.Value) {
-	//	errLog.Print("appending query", query)
+func (tx *cypherTransaction) query(query *string, args []driver.Value) error {
 	stmt := cypherTransactionStatement{
 		Statement:  query,
 		Parameters: make(map[string]interface{}, len(args)),
@@ -81,9 +88,10 @@ func (tx *cypherTransaction) query(query *string, args []driver.Value) {
 	if len(tx.Statements) >= 100 {
 		err := tx.exec()
 		if err != nil {
-			errLog.Print(err)
+			return err
 		}
 	}
+	return nil
 }
 
 func (tx *cypherTransaction) exec() error {
@@ -116,15 +124,6 @@ func (tx *cypherTransaction) exec() error {
 		return err
 	}
 	return nil
-}
-
-type commitError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
-type commitResponse struct {
-	Errors []commitError `json:"errors"`
 }
 
 func (tx *cypherTransaction) Commit() error {

@@ -45,10 +45,17 @@ type neo4jData struct {
 	Version     string `json:"neo4j_version"`
 }
 
-// TODO
-// cache the results of this lookup
-// add support for multiple hosts (cluster)
+func setDefaultHeaders(req *http.Request) {
+	req.Header.Set("X-Stream", "true")
+	req.Header.Set("User-Agent", cqVersion)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+}
+
 func Open(baseURL string) (driver.Conn, error) {
+	// TODO
+	// cache the results of this lookup
+	// add support for multiple hosts (cluster)
 	res, err := http.Get(baseURL)
 	if err != nil {
 		return nil, err
@@ -88,7 +95,6 @@ func (c *conn) Close() error {
 }
 
 func (c *conn) Prepare(query string) (driver.Stmt, error) {
-	//	errLog.Print("preparing a query: ", c)
 	if c.cypherURL == "" {
 		return nil, errNotConnected
 	}

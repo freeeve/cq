@@ -33,6 +33,28 @@ func prepareAndQuery(query string) *sql.Rows {
 	return rows
 }
 
+func TestDbQuery(t *testing.T) {
+	db := testConn()
+	rows, err := db.Query("match (n) return n limit 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rows == nil {
+		t.Fatal("rows shouldn't be nil")
+	}
+}
+
+func TestDbExec(t *testing.T) {
+	db := testConn()
+	result, err := db.Exec("match (n) return n limit 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result == nil {
+		t.Fatal("result should not be nil")
+	}
+}
+
 func TestQuerySimple(t *testing.T) {
 	rows := prepareAndQuery("return 1")
 	hasNext := rows.Next()
