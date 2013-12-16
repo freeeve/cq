@@ -63,13 +63,8 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 	}
 	// this only happens outside of a transaction
 	cyphReq := cypherRequest{
-		Query: stmt.query,
-	}
-	if len(args) > 0 {
-		cyphReq.Params = make(map[string]interface{})
-	}
-	for idx, e := range args {
-		cyphReq.Params[strconv.Itoa(idx)] = e
+		Query:  stmt.query,
+		Params: makeArgsMap(args),
 	}
 
 	var buf bytes.Buffer
@@ -119,4 +114,12 @@ func (rs *rows) Next(dest []driver.Value) error {
 	}
 	rs.pos++
 	return nil
+}
+
+func makeArgsMap(args []driver.Value) map[string]interface{} {
+	argsmap := make(map[string]interface{})
+	for idx, e := range args {
+		argsmap[strconv.Itoa(idx)] = e
+	}
+	return argsmap
 }

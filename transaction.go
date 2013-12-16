@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -91,10 +90,7 @@ func (c *conn) Begin() (driver.Tx, error) {
 func (tx *cypherTransaction) query(query *string, args []driver.Value) error {
 	stmt := cypherTransactionStatement{
 		Statement:  query,
-		Parameters: make(map[string]interface{}, len(args)),
-	}
-	for idx, e := range args {
-		stmt.Parameters[strconv.Itoa(idx)] = e
+		Parameters: makeArgsMap(args),
 	}
 	tx.Statements = append(tx.Statements, stmt)
 	if len(tx.Statements) >= 100 {
