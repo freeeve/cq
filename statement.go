@@ -60,47 +60,44 @@ func (stmt *cypherStmt) NumInput() int {
 func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 	if stmt.c.transactionState == transactionStarted {
 		return nil, errors.New("transactions only support Exec")
-	} else {
-		// this only happens outside of a transaction
-		cyphReq := cypherRequest{
-			Query: stmt.query,
-		}
-		if len(args) > 0 {
-			cyphReq.Params = make(map[string]interface{})
-		}
-		for idx, e := range args {
-			cyphReq.Params[strconv.Itoa(idx)] = e
-		}
-
-		var buf bytes.Buffer
-		err := json.NewEncoder(&buf).Encode(cyphReq)
-		if err != nil {
-			return nil, err
-		}
-		req, err := http.NewRequest("POST", stmt.c.cypherURL, &buf)
-		if err != nil {
-			return nil, err
-		}
-		setDefaultHeaders(req)
-		res, err := client.Do(req)
-		defer res.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-		cyphRes := cypherResult{}
-		err = json.NewDecoder(res.Body).Decode(&cyphRes)
-		io.Copy(ioutil.Discard, res.Body)
-		res.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-		if cyphRes.ErrorMessage != "" {
-			return nil, errors.New("Cypher error: " + cyphRes.ErrorMessage)
-		}
-		return &rows{stmt, &cyphRes, 0}, nil
 	}
-	// never hits
-	return nil, nil
+	// this only happens outside of a transaction
+	cyphReq := cypherRequest{
+		Query: stmt.query,
+	}
+	if len(args) > 0 {
+		cyphReq.Params = make(map[string]interface{})
+	}
+	for idx, e := range args {
+		cyphReq.Params[strconv.Itoa(idx)] = e
+	}
+
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(cyphReq)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", stmt.c.cypherURL, &buf)
+	if err != nil {
+		return nil, err
+	}
+	setDefaultHeaders(req)
+	res, err := client.Do(req)
+	defer res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	cyphRes := cypherResult{}
+	err = json.NewDecoder(res.Body).Decode(&cyphRes)
+	io.Copy(ioutil.Discard, res.Body)
+	res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	if cyphRes.ErrorMessage != "" {
+		return nil, errors.New("Cypher error: " + cyphRes.ErrorMessage)
+	}
+	return &rows{stmt, &cyphRes, 0}, nil
 }
 
 func (rs *rows) Close() error {

@@ -1,3 +1,4 @@
+// Package cq provides a database/sql implementation for Neo4j's Cypher query language.
 package cq
 
 import (
@@ -52,6 +53,9 @@ func setDefaultHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 }
 
+// Open queries the base URL given to it for the Cypher
+// and (optional) Transaction endpoints.
+// It returns a connection handle, or an error if something went wrong.
 func Open(baseURL string) (driver.Conn, error) {
 	// TODO
 	// cache the results of this lookup
