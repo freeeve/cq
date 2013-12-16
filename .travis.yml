@@ -18,4 +18,5 @@ after_success:
 before_install:
   - wget dist.neo4j.org/neo4j-community-$NEO_VERSION-unix.tar.gz
   - tar -xzf neo4j-community-$NEO_VERSION-unix.tar.gz
+  - echo "org.neo4j.server.transaction.timeout=1" >> neo4j-community-$NEO_VERSION/conf/neo4j-server.properties
   - neo4j-community-$NEO_VERSION/bin/neo4j start
