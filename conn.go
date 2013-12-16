@@ -59,7 +59,25 @@ func Open(baseURL string) (driver.Conn, error) {
 	// TODO
 	// cache the results of this lookup
 	// add support for multiple hosts (cluster)
-	res, err := http.Get(baseURL)
+	neoBase, err := getNeoBase(baseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	neoData, err := getNeoData(neoBase.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &conn{}
+	c.cypherURL = neoData.Cypher
+	c.transactionURL = neoData.Transaction
+
+	return c, nil
+}
+
+func getNeoBase(url string) (*neo4jBase, error) {
+	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +89,11 @@ func Open(baseURL string) (driver.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &neoBase, nil
+}
 
-	res, err = http.Get(neoBase.Data)
+func getNeoData(url string) (*neo4jData, error) {
+	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +105,7 @@ func Open(baseURL string) (driver.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	c := &conn{}
-	c.cypherURL = neoData.Cypher
-	c.transactionURL = neoData.Transaction
-
-	return c, nil
+	return &neoData, nil
 }
 
 func (c *conn) Close() error {
