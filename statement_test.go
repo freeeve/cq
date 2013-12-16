@@ -2,9 +2,13 @@ package cq
 
 import (
 	"database/sql/driver"
+	. "launchpad.net/gocheck"
 	"log"
-	"testing"
 )
+
+type StatementSuite struct{}
+
+var _ = Suite(&StatementSuite{})
 
 func prepareTest(query string) driver.Stmt {
 	db := openTest()
@@ -18,25 +22,21 @@ func prepareTest(query string) driver.Stmt {
 	return stmt
 }
 
-func TestQuerySimple(t *testing.T) {
+func (s *StatementSuite) TestQuerySimple(c *C) {
 	stmt := prepareTest("return 1")
 	rows, err := stmt.Query([]driver.Value{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	c.Assert(err, IsNil)
 	dest := make([]driver.Value, 1)
 
 	err = rows.Next(dest)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c.Assert(err, IsNil)
 
 	if rows.Columns()[0] != "1" {
-		t.Fatal("column doesn't match")
+		c.Fatal("column doesn't match")
 	}
 
 	err = rows.Next(dest)
 	if err == nil {
-		t.Fatal("doesn't end after first row")
+		c.Fatal("doesn't end after first row")
 	}
 }

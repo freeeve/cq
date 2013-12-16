@@ -1,104 +1,105 @@
 package cq_test
 
 import (
+	. "launchpad.net/gocheck"
 	"log"
-	"testing"
 )
 
-func BenchmarkSimpleQuery(b *testing.B) {
+type BenchmarkSuite struct{}
+
+var _ = Suite(&BenchmarkSuite{})
+
+func (s *BenchmarkSuite) SetUpTest(c *C) {
+	db := testConn()
+	db.Exec("match (n) where has(n.`benchmark~test~id`) delete n")
+}
+
+func (s *BenchmarkSuite) TearDownTest(c *C) {
+	db := testConn()
+	db.Exec("match (n) where has(n.`benchmark~test~id`) delete n")
+}
+
+func (s *BenchmarkSuite) BenchmarkSimpleQuery(c *C) {
 	stmt := prepareTest("return 1")
 	defer stmt.Close()
 	var test int
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < c.N; i++ {
 		rows, err := stmt.Query()
-		if err != nil {
-			log.Fatal(err)
-		}
+		c.Assert(err, IsNil)
+
 		rows.Scan(&test)
 		rows.Close()
 	}
 }
 
-func BenchmarkSimpleCreate(b *testing.B) {
-	stmt := prepareTest("create ()")
+func (s *BenchmarkSuite) BenchmarkSimpleCreate(c *C) {
+	stmt := prepareTest("create ({`benchmark~test~id`:0})")
 	defer stmt.Close()
 	var test int
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < c.N; i++ {
 		rows, err := stmt.Query()
-		if err != nil {
-			log.Fatal(err)
-		}
+		c.Assert(err, IsNil)
+
 		rows.Scan(&test)
 		rows.Close()
 	}
 }
 
-func BenchmarkSimpleCreateLabel(b *testing.B) {
-	stmt := prepareTest("create (:Test)")
+func (s *BenchmarkSuite) BenchmarkSimpleCreateLabel(c *C) {
+	stmt := prepareTest("create (:Test {`benchmark~test~id`:0})")
 	defer stmt.Close()
 	var test int
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < c.N; i++ {
 		rows, err := stmt.Query()
-		if err != nil {
-			log.Fatal(err)
-		}
+		c.Assert(err, IsNil)
+
 		rows.Scan(&test)
 		rows.Close()
 	}
 }
 
-func BenchmarkTransactional10SimpleCreate(b *testing.B) {
-	transactionalSizeSimpleCreate(b, 10)
+func (s *BenchmarkSuite) BenchmarkTx10SimpleCreate(c *C) {
+	txSizeSimpleCreate(c, 10)
 }
 
-func BenchmarkTransactional100SimpleCreate(b *testing.B) {
-	transactionalSizeSimpleCreate(b, 100)
+func (s *BenchmarkSuite) BenchmarkTx100SimpleCreate(c *C) {
+	txSizeSimpleCreate(c, 100)
 }
 
-func BenchmarkTransactional1000SimpleCreate(b *testing.B) {
-	transactionalSizeSimpleCreate(b, 1000)
+func (s *BenchmarkSuite) BenchmarkTx1000SimpleCreate(c *C) {
+	txSizeSimpleCreate(c, 1000)
 }
 
-func BenchmarkTransactional10000SimpleCreate(b *testing.B) {
-	transactionalSizeSimpleCreate(b, 10000)
+func (s *BenchmarkSuite) BenchmarkTx10000SimpleCreate(c *C) {
+	txSizeSimpleCreate(c, 10000)
 }
 
-func transactionalSizeSimpleCreate(b *testing.B, size int) {
+func txSizeSimpleCreate(c *C, size int) {
 	conn := testConn()
 	defer conn.Close()
 
 	tx, err := conn.Begin()
-	//	log.Println("begin:", tx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	stmt, err := tx.Prepare("create ({n:{0}})")
-	if err != nil {
-		log.Fatal(err)
-	}
-	for i := 0; i < b.N; i++ {
-		//		log.Println("i:", i)
+	stmt, err := tx.Prepare("create ({`benchmark~test~id`:{0}})")
+	c.Assert(err, IsNil)
+
+	for i := 0; i < c.N; i++ {
 		_, err = stmt.Exec(i)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if (i > 0 && i%size == 0) || i == b.N-1 {
-			//			log.Println("committing:", tx)
+		c.Assert(err, IsNil)
+
+		if (i > 0 && i%size == 0) || i == c.N-1 {
 			err = tx.Commit()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if i < b.N-1 {
+			c.Assert(err, IsNil)
+
+			if i < c.N-1 {
 				tx, err = conn.Begin()
-				//				log.Println("begin:", tx)
-				if err != nil {
-					log.Fatal(err)
-				}
+				c.Assert(err, IsNil)
+
 				stmt.Close()
-				stmt, err = tx.Prepare("create ({n:{0}})")
-				if err != nil {
-					log.Fatal(err)
-				}
+				stmt, err = tx.Prepare("create ({`benchmark~test~id`:{0}})")
+				c.Assert(err, IsNil)
 			}
 		}
 	}

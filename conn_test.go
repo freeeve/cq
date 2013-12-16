@@ -2,16 +2,20 @@ package cq
 
 import (
 	"database/sql/driver"
+	"flag"
+	. "launchpad.net/gocheck"
 	"log"
-	"testing"
 )
 
+type ConnSuite struct{}
+
 var (
-	testURL = "http://localhost:7474/"
+	_       = Suite(&ConnSuite{})
+	testURL = flag.String("testdb", "http://localhost:7474/", "the base url for the test db")
 )
 
 func openTest() driver.Conn {
-	db, err := Open(testURL)
+	db, err := Open(*testURL)
 	if err != nil {
 		log.Println("can't connect to db.")
 		return nil
@@ -19,33 +23,31 @@ func openTest() driver.Conn {
 	return db
 }
 
-func TestOpen(t *testing.T) {
+func (s *ConnSuite) TestOpen(c *C) {
 	db := openTest()
 	if db == nil {
-		t.Fatal("can't connect to test db: ", testURL)
+		c.Fatal("can't connect to test db: ", *testURL)
 	}
 }
 
-func TestPrepareNoParams(t *testing.T) {
+func (s *ConnSuite) TestPrepareNoParams(c *C) {
 	db := openTest()
 	if db == nil {
-		t.Fatal("can't connect to test db: ", testURL)
+		c.Fatal("can't connect to test db: ", *testURL)
 	}
 	stmt, err := db.Prepare("match (n) return n limit 1")
-	if err != nil {
-		t.Fatal(err)
-	}
+	c.Assert(err, IsNil)
 	if stmt == nil {
-		t.Fatal("statement shouldn't be nil")
+		c.Fatal("stmt is nil")
 	}
 }
 
-func TestBadURL(t *testing.T) {
+func (s *ConnSuite) TestBadURL(c *C) {
 	db, err := Open("")
 	if err == nil {
-		t.Fatal("err was nil!")
+		c.Fatal("err was nil!")
 	}
 	if db != nil {
-		t.Fatal("db should be nil:", db)
+		c.Fatal("db should be nil:", db)
 	}
 }

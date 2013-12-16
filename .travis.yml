@@ -22,4 +22,5 @@ before_install:
   - neo4j-community-$NEO_VERSION/bin/neo4j start
 
 script:
-  - go test -v -gocheck.v
+  - go test -gocheck.v
+  - go test -gocheck.b
