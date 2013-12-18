@@ -223,7 +223,7 @@ func sendKeepAlive(txURL string) {
 	time.AfterFunc(dur, func() { sendKeepAlive(txURL) })
 }
 
-// getDirToKeepAlive gets the difference between now and the expiration
+// getDurToKeepAlive gets the difference between now and the expiration
 // and returns the duration until the halfway point
 func getDurToKeepAlive(t time.Time) time.Duration {
 	dur := -1 * time.Since(t)
