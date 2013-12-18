@@ -194,33 +194,42 @@ func getTransactionResponse(url string, cypherTransReq cypherTransaction) (*tran
 	return &transResponse, nil
 }
 
+// updateKeepAlive cancels the current timer, if it is set, and
+// schedules a timer to send a keepalive message before the transaction expires.
 func (tx *cypherTransaction) updateKeepAlive() {
 	if tx.keepAlive != nil {
 		tx.keepAlive.Stop()
 	}
-	dur := -1 * time.Since(tx.expiration)
-	if dur <= 1*time.Second {
-		dur = 300 * time.Millisecond
-	}
+	dur := getDurToKeepAlive(tx.expiration)
 	tx.keepAlive = time.AfterFunc(dur, func() { sendKeepAlive(tx.transactionURL) })
 }
 
+// sendKeepAlive sends an empty Cypher transactional statement
+// to the URL given. It parses the response and schedules a new
+// call to itself halfway to the next timeout
 func sendKeepAlive(txURL string) {
-	//log.Println("sending keepalive")
 	trans, err := getTransactionResponse(txURL, cypherTransaction{Statements: []cypherTransactionStatement{}})
 	if err != nil {
-		//log.Println(trans)
 		return
 	}
 	if len(trans.Errors) > 0 {
-		//log.Println(trans)
 		return
 	}
 	exp, err := time.Parse(time.RFC1123Z, trans.Transaction.Expires)
 	if err != nil {
-		//log.Println(err)
 		return
 	}
-	dur := -1 * time.Since(exp)
+	dur := getDurToKeepAlive(exp)
 	time.AfterFunc(dur, func() { sendKeepAlive(txURL) })
+}
+
+// getDirToKeepAlive gets the difference between now and the expiration
+// and returns the duration until the halfway point
+func getDurToKeepAlive(t time.Time) time.Duration {
+	dur := -1 * time.Since(t)
+	if dur < time.Second*1 {
+		dur = time.Second * 1
+	}
+	dur /= 2
+	return dur
 }

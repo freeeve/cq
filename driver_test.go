@@ -41,7 +41,7 @@ func prepareAndQuery(query string) *sql.Rows {
 
 func (s *DriverSuite) TestDbQuery(c *C) {
 	db := testConn()
-	rows, err := db.Query("match (n) return n limit 1")
+	rows, err := db.Query("return 1")
 	c.Assert(err, IsNil)
 
 	if rows == nil {
@@ -51,7 +51,7 @@ func (s *DriverSuite) TestDbQuery(c *C) {
 
 func (s *DriverSuite) TestDbExec(c *C) {
 	db := testConn()
-	result, err := db.Exec("match (n) return n limit 1")
+	result, err := db.Exec("return 1")
 	c.Assert(err, IsNil)
 
 	if result == nil {
