@@ -41,7 +41,7 @@ type neo4jBase struct {
 
 type neo4jData struct {
 	Cypher      string `json:"cypher"`
-	Transaction string `json:"transaction"`
+	Transaction string `json:"transaction,omitempty"`
 	Version     string `json:"neo4j_version"`
 }
 

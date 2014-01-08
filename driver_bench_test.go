@@ -1,8 +1,10 @@
 package cq_test
 
 import (
+	"fmt"
 	. "launchpad.net/gocheck"
 	"log"
+	"time"
 )
 
 type BenchmarkSuite struct{}
@@ -11,12 +13,18 @@ var _ = Suite(&BenchmarkSuite{})
 
 func (s *BenchmarkSuite) SetUpTest(c *C) {
 	db := testConn()
-	db.Exec("match (n) where has(n.`benchmark~test~id`) delete n")
+	_, err := db.Exec("start n=node(*) where has(n.`benchmark~test~id`) delete n")
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *BenchmarkSuite) TearDownTest(c *C) {
 	db := testConn()
-	db.Exec("match (n) where has(n.`benchmark~test~id`) delete n")
+	_, err := db.Exec("start n=node(*) where has(n.`benchmark~test~id`) delete n")
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *BenchmarkSuite) BenchmarkSimpleQuery(c *C) {
@@ -33,11 +41,11 @@ func (s *BenchmarkSuite) BenchmarkSimpleQuery(c *C) {
 }
 
 func (s *BenchmarkSuite) BenchmarkSimpleCreate(c *C) {
-	stmt := prepareTest("create ({`benchmark~test~id`:0})")
+	stmt := prepareTest("create ({`benchmark~test~id`:0, timestamp:{0}})")
 	defer stmt.Close()
 	var test int
 	for i := 0; i < c.N; i++ {
-		rows, err := stmt.Query()
+		rows, err := stmt.Query(fmt.Sprint(time.Now().UnixNano()))
 		c.Assert(err, IsNil)
 
 		rows.Scan(&test)
@@ -46,11 +54,11 @@ func (s *BenchmarkSuite) BenchmarkSimpleCreate(c *C) {
 }
 
 func (s *BenchmarkSuite) BenchmarkSimpleCreateLabel(c *C) {
-	stmt := prepareTest("create (:Test {`benchmark~test~id`:0})")
+	stmt := prepareTest("create (:Test {`benchmark~test~id`:0, timestamp:{0}})")
 	defer stmt.Close()
 	var test int
 	for i := 0; i < c.N; i++ {
-		rows, err := stmt.Query()
+		rows, err := stmt.Query(fmt.Sprint(time.Now().UnixNano()))
 		c.Assert(err, IsNil)
 
 		rows.Scan(&test)

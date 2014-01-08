@@ -14,7 +14,7 @@ type DriverSuite struct{}
 var _ = Suite(&DriverSuite{})
 
 func testConn() *sql.DB {
-	db, err := sql.Open("neo4j-cypher", "http://127.0.0.1:7474/")
+	db, err := sql.Open("neo4j-cypher", "http://localhost:7474/")
 	if err != nil {
 		log.Fatal(err)
 	}
