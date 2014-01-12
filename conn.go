@@ -115,7 +115,7 @@ func (c *conn) Close() error {
 
 func (c *conn) Prepare(query string) (driver.Stmt, error) {
 	if c.cypherURL == "" {
-		return nil, errNotConnected
+		return nil, ErrNotConnected
 	}
 
 	stmt := &cypherStmt{

@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type rows struct {
@@ -21,54 +20,6 @@ type rows struct {
 type cypherStmt struct {
 	c     *conn
 	query *string
-}
-
-type CypherType uint8
-
-const (
-	String  CypherType = iota
-	Int64   CypherType = iota
-	Int     CypherType = iota
-	Float64 CypherType = iota
-	Null    CypherType = iota
-)
-
-type CypherValue struct {
-	Value interface{}
-	Type  CypherType
-}
-
-func (c *CypherValue) UnmarshalJSON(b []byte) error {
-	str := string(b)
-	if str == "null" {
-		c.Value = nil
-		c.Type = Null
-		return nil
-	}
-	if len(b) > 0 {
-		if b[0] == byte('"') {
-			c.Value = strings.Trim(str, "\"")
-			c.Type = String
-			return nil
-		}
-	}
-	var err error
-	c.Value, err = strconv.Atoi(str)
-	if err == nil {
-		c.Type = Int
-		return nil
-	}
-	c.Value, err = strconv.ParseInt(str, 10, 64)
-	if err == nil {
-		c.Type = Int64
-		return nil
-	}
-	c.Value, err = strconv.ParseFloat(str, 64)
-	if err == nil {
-		c.Type = Float64
-		return nil
-	}
-	return nil
 }
 
 type cypherResult struct {

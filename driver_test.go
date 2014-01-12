@@ -2,12 +2,13 @@ package cq_test
 
 import (
 	"database/sql"
-	_ "github.com/wfreeman/cq"
+	"errors"
+	"github.com/wfreeman/cq"
 	. "launchpad.net/gocheck"
 	"log"
 )
 
-// This file is meant to hold integration tests where cq must be imported as _
+// This file is meant to hold integration tests where cq must be imported
 
 type DriverSuite struct{}
 
@@ -99,6 +100,31 @@ func (s *DriverSuite) TestQuerySimpleString(c *C) {
 	}
 }
 
+func (s *DriverSuite) TestQuerySimpleBool(c *C) {
+	rows := prepareAndQuery("return true")
+	rows.Next()
+	var test bool
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+
+	if test != true {
+		c.Fatal("test != true;", test)
+	}
+}
+
+func (s *DriverSuite) TestQueryBoolParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(true)
+	rows.Next()
+	var test bool
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+
+	if test != true {
+		c.Fatal("test != true;", test)
+	}
+}
+
 func (s *DriverSuite) TestQueryIntParam(c *C) {
 	stmt := prepareTest("with {0} as test return test")
 	rows, err := stmt.Query(123)
@@ -114,15 +140,85 @@ func (s *DriverSuite) TestQueryIntParam(c *C) {
 	}
 }
 
-func (s *DriverSuite) TestQuerySimpleIntArray(c *C) {
-	c.Skip("not quite ready for arrays")
+func (s *DriverSuite) TestQueryIntArray(c *C) {
 	rows := prepareAndQuery("return [1,2,3]")
 	rows.Next()
-	var test []int
+	var test cq.ArrayInt
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
 
-	if test[0] != 1 || test[1] != 2 || test[2] != 3 {
+	if test.Value[0] != 1 || test.Value[1] != 2 || test.Value[2] != 3 {
+		c.Fatal("test != [1,2,3];", test)
+	}
+}
+
+func (s *DriverSuite) TestQueryBadIntArray(c *C) {
+	rows := prepareAndQuery("return [1,2,'asdf']")
+	rows.Next()
+	var test cq.ArrayInt
+	err := rows.Scan(&test)
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int"))
+}
+
+func (s *DriverSuite) TestQueryCypherValueNull(c *C) {
+	rows := prepareAndQuery("return null")
+	rows.Next()
+	var test cq.CypherValue
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Type, Equals, cq.CypherNull)
+	c.Assert(test.Value, Equals, nil)
+}
+
+func (s *DriverSuite) TestQueryCypherValueBoolean(c *C) {
+	rows := prepareAndQuery("return true")
+	rows.Next()
+	var test cq.CypherValue
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Type, Equals, cq.CypherBoolean)
+	c.Assert(test.Value, Equals, true)
+}
+
+func (s *DriverSuite) TestQueryCypherValueString(c *C) {
+	rows := prepareAndQuery("return 'asdf'")
+	rows.Next()
+	var test cq.CypherValue
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Type, Equals, cq.CypherString)
+	c.Assert(test.Value, Equals, "asdf")
+}
+
+func (s *DriverSuite) TestQueryCypherValueInt64(c *C) {
+	rows := prepareAndQuery("return 9223372000000000000")
+	rows.Next()
+	var test cq.CypherValue
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Value, Equals, int64(9223372000000000000))
+	c.Assert(test.Type, Equals, cq.CypherInt64)
+}
+
+func (s *DriverSuite) TestQueryCypherValueInt(c *C) {
+	rows := prepareAndQuery("return 1234567890")
+	rows.Next()
+	var test cq.CypherValue
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Type, Equals, cq.CypherInt)
+	c.Assert(test.Value, Equals, 1234567890)
+}
+
+func (s *DriverSuite) TestQueryCypherValueIntArray(c *C) {
+	rows := prepareAndQuery("return [1,2,3]")
+	rows.Next()
+	var test cq.CypherValue
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Type, Equals, cq.CypherArrayInt)
+
+	if test.Value.([]int)[0] != 1 || test.Value.([]int)[1] != 2 || test.Value.([]int)[2] != 3 {
 		c.Fatal("test != [1,2,3];", test)
 	}
 }
@@ -147,10 +243,10 @@ func (s *DriverSuite) TestScanNullInt64(c *C) {
 }
 
 func (s *DriverSuite) TestScanBigInt64(c *C) {
-	rows := prepareAndQuery("return 123456789")
+	rows := prepareAndQuery("return 123456789101112")
 	rows.Next()
 	var i64 int64
 	err := rows.Scan(&i64)
 	c.Assert(err, IsNil)
-	c.Assert(i64, Equals, int64(123456789))
+	c.Assert(i64, Equals, int64(123456789101112))
 }

@@ -53,7 +53,7 @@ type commitResponse struct {
 
 func (c *conn) Begin() (driver.Tx, error) {
 	if c.transactionURL == "" {
-		return nil, errTransactionsNotSupported
+		return nil, ErrTransactionsNotSupported
 	}
 	transResponse, err := getTransactionResponse(c.transactionURL, cypherTransaction{})
 	if err != nil {
