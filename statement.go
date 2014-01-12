@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type rows struct {
@@ -22,9 +23,57 @@ type cypherStmt struct {
 	query *string
 }
 
+type CypherType uint8
+
+const (
+	String  CypherType = iota
+	Int64   CypherType = iota
+	Int     CypherType = iota
+	Float64 CypherType = iota
+	Null    CypherType = iota
+)
+
+type CypherValue struct {
+	Value interface{}
+	Type  CypherType
+}
+
+func (c *CypherValue) UnmarshalJSON(b []byte) error {
+	str := string(b)
+	if str == "null" {
+		c.Value = nil
+		c.Type = Null
+		return nil
+	}
+	if len(b) > 0 {
+		if b[0] == byte('"') {
+			c.Value = strings.Trim(str, "\"")
+			c.Type = String
+			return nil
+		}
+	}
+	var err error
+	c.Value, err = strconv.Atoi(str)
+	if err == nil {
+		c.Type = Int
+		return nil
+	}
+	c.Value, err = strconv.ParseInt(str, 10, 64)
+	if err == nil {
+		c.Type = Int64
+		return nil
+	}
+	c.Value, err = strconv.ParseFloat(str, 64)
+	if err == nil {
+		c.Type = Float64
+		return nil
+	}
+	return nil
+}
+
 type cypherResult struct {
 	Columns         []string        `json:"columns"`
-	Data            [][]interface{} `json:"data"`
+	Data            [][]CypherValue `json:"data"`
 	ErrorMessage    string          `json:"message"`
 	ErrorException  string          `json:"exception"`
 	ErrorFullname   string          `json:"fullname"`
@@ -83,6 +132,7 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 		return nil, err
 	}
 	cyphRes := cypherResult{}
+	//b, err := ioutil.ReadAll(res.Body)
 	err = json.NewDecoder(res.Body).Decode(&cyphRes)
 	io.Copy(ioutil.Discard, res.Body)
 	res.Body.Close()
@@ -110,7 +160,7 @@ func (rs *rows) Next(dest []driver.Value) error {
 		return io.EOF
 	}
 	for i := 0; i < len(dest); i++ {
-		dest[i] = rs.result.Data[rs.pos][i]
+		dest[i] = rs.result.Data[rs.pos][i].Value
 	}
 	rs.pos++
 	return nil

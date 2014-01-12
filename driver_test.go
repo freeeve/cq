@@ -95,7 +95,7 @@ func (s *DriverSuite) TestQuerySimpleString(c *C) {
 	c.Assert(err, IsNil)
 
 	if test != "123" {
-		c.Fatal("test != '123'")
+		c.Fatal("test != '123';", test)
 	}
 }
 
@@ -115,7 +115,7 @@ func (s *DriverSuite) TestQueryIntParam(c *C) {
 }
 
 func (s *DriverSuite) TestQuerySimpleIntArray(c *C) {
-	c.Skip("can't convert to arrays yet")
+	c.Skip("not quite ready for arrays")
 	rows := prepareAndQuery("return [1,2,3]")
 	rows.Next()
 	var test []int
@@ -125,4 +125,32 @@ func (s *DriverSuite) TestQuerySimpleIntArray(c *C) {
 	if test[0] != 1 || test[1] != 2 || test[2] != 3 {
 		c.Fatal("test != [1,2,3];", test)
 	}
+}
+
+func (s *DriverSuite) TestQueryNullString(c *C) {
+	rows := prepareAndQuery("return null")
+	rows.Next()
+	var nullString sql.NullString
+	err := rows.Scan(&nullString)
+	c.Assert(err, IsNil)
+	c.Assert(nullString.Valid, Equals, false)
+}
+
+func (s *DriverSuite) TestScanNullInt64(c *C) {
+	rows := prepareAndQuery("return 123456789")
+	rows.Next()
+	var nullInt64 sql.NullInt64
+	err := rows.Scan(&nullInt64)
+	c.Assert(err, IsNil)
+	c.Assert(nullInt64.Valid, Equals, true)
+	c.Assert(nullInt64.Int64, Equals, int64(123456789))
+}
+
+func (s *DriverSuite) TestScanBigInt64(c *C) {
+	rows := prepareAndQuery("return 123456789")
+	rows.Next()
+	var i64 int64
+	err := rows.Scan(&i64)
+	c.Assert(err, IsNil)
+	c.Assert(i64, Equals, int64(123456789))
 }
