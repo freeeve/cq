@@ -13,7 +13,8 @@ after_success:
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - export PATH=$PATH:$HOME/gopath/bin/
-  - goveralls rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
+  - tail +2 typescov.out >> cov.out
+  - goveralls -coverprofile=cov.out rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
   
 before_install:
   - wget dist.neo4j.org/neo4j-community-$NEO_VERSION-unix.tar.gz
@@ -22,6 +23,6 @@ before_install:
   - neo4j-community-$NEO_VERSION/bin/neo4j start
 
 script:
-  - go test -gocheck.v
-  - go test ./... -gocheck.v
+  - go test ./types -covermode=count -coverprofile=typescov.out
+  - go test -covermode=count -coverprofile=cov.out
   - go test -gocheck.b
