@@ -3,7 +3,8 @@ package cq_test
 import (
 	"database/sql"
 	"errors"
-	"github.com/wfreeman/cq"
+	_ "github.com/wfreeman/cq"
+	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
 	"log"
 )
@@ -88,6 +89,16 @@ func (s *DriverSuite) TestQuerySimpleFloat(c *C) {
 	}
 }
 
+func (s *DriverSuite) TestQueryFloatParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(1234567910.891)
+	rows.Next()
+	var test float64
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test, Equals, 1234567910.891)
+}
+
 func (s *DriverSuite) TestQuerySimpleString(c *C) {
 	rows := prepareAndQuery("return '123'")
 	rows.Next()
@@ -98,6 +109,27 @@ func (s *DriverSuite) TestQuerySimpleString(c *C) {
 	if test != "123" {
 		c.Fatal("test != '123';", test)
 	}
+}
+
+func (s *DriverSuite) TestQueryStringParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query("123")
+	rows.Next()
+	var test string
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test, Equals, "123")
+}
+
+func (s *DriverSuite) TestQueryArrayByteParam(c *C) {
+	c.Skip("byte arrays don't work yet")
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query([]byte("123"))
+	rows.Next()
+	var test []byte
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(string(test), DeepEquals, string([]byte("123")))
 }
 
 func (s *DriverSuite) TestQuerySimpleBool(c *C) {
@@ -125,6 +157,19 @@ func (s *DriverSuite) TestQueryBoolParam(c *C) {
 	}
 }
 
+func (s *DriverSuite) TestQueryBoolFalseParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(false)
+	rows.Next()
+	var test bool
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+
+	if test != false {
+		c.Fatal("test != true;", test)
+	}
+}
+
 func (s *DriverSuite) TestQueryIntParam(c *C) {
 	stmt := prepareTest("with {0} as test return test")
 	rows, err := stmt.Query(123)
@@ -134,93 +179,214 @@ func (s *DriverSuite) TestQueryIntParam(c *C) {
 	var test int
 	err = rows.Scan(&test)
 	c.Assert(err, IsNil)
-
-	if test != 123 {
-		c.Fatal("test != 123;", test)
-	}
+	c.Assert(test, Equals, 123)
 }
 
-func (s *DriverSuite) TestQueryIntArray(c *C) {
-	rows := prepareAndQuery("return [1,2,3]")
-	rows.Next()
-	var test cq.ArrayInt
-	err := rows.Scan(&test)
+func (s *DriverSuite) TestQueryArrayIntParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(types.ArrayInt{[]int{1, 2, 3}})
 	c.Assert(err, IsNil)
 
-	if test.Value[0] != 1 || test.Value[1] != 2 || test.Value[2] != 3 {
-		c.Fatal("test != [1,2,3];", test)
-	}
+	rows.Next()
+	var test types.ArrayInt
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []int{1, 2, 3})
+}
+
+func (s *DriverSuite) TestQueryIntArrayParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query([]int{1, 2, 3})
+	c.Assert(err, IsNil)
+
+	rows.Next()
+	var test types.ArrayInt
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []int{1, 2, 3})
+}
+
+func (s *DriverSuite) TestQueryArrayInt(c *C) {
+	rows := prepareAndQuery("return [1,2,3]")
+	rows.Next()
+	var test types.ArrayInt
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []int{1, 2, 3})
 }
 
 func (s *DriverSuite) TestQueryBadIntArray(c *C) {
 	rows := prepareAndQuery("return [1,2,'asdf']")
 	rows.Next()
-	var test cq.ArrayInt
+	var test types.ArrayInt
 	err := rows.Scan(&test)
 	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int"))
+}
+
+func (s *DriverSuite) TestQueryNullIntArray(c *C) {
+	rows := prepareAndQuery("return null")
+	rows.Next()
+	var test types.ArrayInt
+	err := rows.Scan(&test)
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: scan value is null"))
+}
+
+func (s *DriverSuite) TestQueryArrayFloat64Param(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(types.ArrayFloat64{[]float64{1.1, 2.1, 3.1}})
+	c.Assert(err, IsNil)
+
+	rows.Next()
+	var test types.ArrayFloat64
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []float64{1.1, 2.1, 3.1})
+}
+
+func (s *DriverSuite) TestQueryFloat64ArrayParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query([]float64{1.1, 2.1, 3.1})
+	c.Assert(err, IsNil)
+
+	rows.Next()
+	var test types.ArrayFloat64
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []float64{1.1, 2.1, 3.1})
+}
+
+func (s *DriverSuite) TestQueryArrayFloat64(c *C) {
+	rows := prepareAndQuery("return [1.1,2.1,3.1]")
+	rows.Next()
+	var test types.ArrayFloat64
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []float64{1.1, 2.1, 3.1})
+}
+
+func (s *DriverSuite) TestQueryBadFloatArray(c *C) {
+	rows := prepareAndQuery("return [1.1,2.1,'asdf']")
+	rows.Next()
+	var test types.ArrayFloat64
+	err := rows.Scan(&test)
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type float64"))
+}
+
+func (s *DriverSuite) TestQueryNullFloat64Array(c *C) {
+	rows := prepareAndQuery("return null")
+	rows.Next()
+	var test types.ArrayFloat64
+	err := rows.Scan(&test)
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: scan value is null"))
+}
+
+func (s *DriverSuite) TestQueryArrayInt64Param(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query(types.ArrayInt64{[]int64{12345678910, 234567891011, 3456789101112}})
+	c.Assert(err, IsNil)
+
+	rows.Next()
+	var test types.ArrayInt64
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []int64{12345678910, 234567891011, 3456789101112})
+}
+
+func (s *DriverSuite) TestQueryInt64ArrayParam(c *C) {
+	stmt := prepareTest("with {0} as test return test")
+	rows, err := stmt.Query([]int64{12345678910, 234567891011, 3456789101112})
+	c.Assert(err, IsNil)
+
+	rows.Next()
+	var test types.ArrayInt64
+	err = rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []int64{12345678910, 234567891011, 3456789101112})
+}
+
+func (s *DriverSuite) TestQueryArrayInt64(c *C) {
+	rows := prepareAndQuery("return [12345678910, 234567891011, 3456789101112]")
+	rows.Next()
+	var test types.ArrayInt64
+	err := rows.Scan(&test)
+	c.Assert(err, IsNil)
+	c.Assert(test.Val, DeepEquals, []int64{12345678910, 234567891011, 3456789101112})
+}
+
+func (s *DriverSuite) TestQueryBadInt64Array(c *C) {
+	rows := prepareAndQuery("return [123456789,'asdf']")
+	rows.Next()
+	var test types.ArrayInt64
+	err := rows.Scan(&test)
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int64"))
+}
+
+func (s *DriverSuite) TestQueryNullInt64Array(c *C) {
+	rows := prepareAndQuery("return null")
+	rows.Next()
+	var test types.ArrayInt64
+	err := rows.Scan(&test)
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: scan value is null"))
 }
 
 func (s *DriverSuite) TestQueryCypherValueNull(c *C) {
 	rows := prepareAndQuery("return null")
 	rows.Next()
-	var test cq.CypherValue
+	var test types.CypherValue
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
-	c.Assert(test.Type, Equals, cq.CypherNull)
-	c.Assert(test.Value, Equals, nil)
+	c.Assert(test.Type, Equals, types.CypherNull)
+	c.Assert(test.Val, Equals, nil)
 }
 
 func (s *DriverSuite) TestQueryCypherValueBoolean(c *C) {
 	rows := prepareAndQuery("return true")
 	rows.Next()
-	var test cq.CypherValue
+	var test types.CypherValue
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
-	c.Assert(test.Type, Equals, cq.CypherBoolean)
-	c.Assert(test.Value, Equals, true)
+	c.Assert(test.Type, Equals, types.CypherBoolean)
+	c.Assert(test.Val, Equals, true)
 }
 
 func (s *DriverSuite) TestQueryCypherValueString(c *C) {
 	rows := prepareAndQuery("return 'asdf'")
 	rows.Next()
-	var test cq.CypherValue
+	var test types.CypherValue
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
-	c.Assert(test.Type, Equals, cq.CypherString)
-	c.Assert(test.Value, Equals, "asdf")
+	c.Assert(test.Type, Equals, types.CypherString)
+	c.Assert(test.Val, Equals, "asdf")
 }
 
 func (s *DriverSuite) TestQueryCypherValueInt64(c *C) {
 	rows := prepareAndQuery("return 9223372000000000000")
 	rows.Next()
-	var test cq.CypherValue
+	var test types.CypherValue
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
-	c.Assert(test.Value, Equals, int64(9223372000000000000))
-	c.Assert(test.Type, Equals, cq.CypherInt64)
+	c.Assert(test.Val, Equals, int64(9223372000000000000))
+	c.Assert(test.Type, Equals, types.CypherInt64)
 }
 
 func (s *DriverSuite) TestQueryCypherValueInt(c *C) {
 	rows := prepareAndQuery("return 1234567890")
 	rows.Next()
-	var test cq.CypherValue
+	var test types.CypherValue
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
-	c.Assert(test.Type, Equals, cq.CypherInt)
-	c.Assert(test.Value, Equals, 1234567890)
+	c.Assert(test.Type, Equals, types.CypherInt)
+	c.Assert(test.Val, Equals, 1234567890)
 }
 
 func (s *DriverSuite) TestQueryCypherValueIntArray(c *C) {
-	rows := prepareAndQuery("return [1,2,3]")
+	rows := prepareAndQuery("return [1,2,2345678910]")
 	rows.Next()
-	var test cq.CypherValue
+	var test types.CypherValue
 	err := rows.Scan(&test)
 	c.Assert(err, IsNil)
-	c.Assert(test.Type, Equals, cq.CypherArrayInt)
-
-	if test.Value.([]int)[0] != 1 || test.Value.([]int)[1] != 2 || test.Value.([]int)[2] != 3 {
-		c.Fatal("test != [1,2,3];", test)
-	}
+	c.Assert(test.Type, Equals, types.CypherArrayInt)
+	c.Assert(test.Val.([]int), DeepEquals, []int{1, 2, 2345678910})
 }
 
 func (s *DriverSuite) TestQueryNullString(c *C) {
@@ -249,4 +415,9 @@ func (s *DriverSuite) TestScanBigInt64(c *C) {
 	err := rows.Scan(&i64)
 	c.Assert(err, IsNil)
 	c.Assert(i64, Equals, int64(123456789101112))
+}
+
+func (s *DriverSuite) TestExecNilRows(c *C) {
+	db := testConn()
+	db.Exec("...")
 }

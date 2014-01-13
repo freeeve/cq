@@ -48,7 +48,9 @@ func (stmt *cypherStmt) Exec(args []driver.Value) (driver.Result, error) {
 		return nil, err
 	}
 	rows, err := stmt.Query(args)
-	defer rows.Close()
+	if rows != nil {
+		defer rows.Close()
+	}
 	// TODO add counts and error support
 	return nil, err
 }
@@ -111,7 +113,7 @@ func (rs *rows) Next(dest []driver.Value) error {
 		return io.EOF
 	}
 	for i := 0; i < len(dest); i++ {
-		dest[i] = rs.result.Data[rs.pos][i].Value
+		dest[i] = rs.result.Data[rs.pos][i].Val
 	}
 	rs.pos++
 	return nil
