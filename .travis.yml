@@ -9,9 +9,6 @@ before_script:
   - go get launchpad.net/gocheck
   
 after_success:
-  - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
-  - export PATH=$PATH:$HOME/gopath/bin/
   
 before_install:
   - go get code.google.com/p/go.tools/cmd/cover
@@ -26,4 +23,7 @@ script:
   - go test -gocheck.b -covermode=count -coverprofile=bench.out
   - tail -n +2 typescov.out >> cov.out
   - tail -n +2 bench.out >> cov.out
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - export PATH=$PATH:$HOME/gopath/bin/
   - goveralls -coverprofile=cov.out rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
