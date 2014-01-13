@@ -1,6 +1,10 @@
 package types
 
-import ()
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+)
 
 type ArrayFloat64 struct {
 	Val []float64
@@ -9,7 +13,7 @@ type ArrayFloat64 struct {
 func (af *ArrayFloat64) Scan(value interface{}) error {
 	//fmt.Println("attempting to Scan:", value)
 	if value == nil {
-		return errors.New("cq: scan value is null")
+		return ErrScanOnNil
 	}
 
 	switch value.(type) {
@@ -20,7 +24,7 @@ func (af *ArrayFloat64) Scan(value interface{}) error {
 		err := json.Unmarshal(value.([]byte), &af.Val)
 		return err
 	}
-	return errors.New("cq: invalid Scan value for ArrayInt")
+	return errors.New("cq: invalid Scan value for ArrayFloat")
 }
 
 func (ai ArrayFloat64) Value() (driver.Value, error) {

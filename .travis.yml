@@ -23,4 +23,5 @@ before_install:
 
 script:
   - go test -gocheck.v
+  - go test ./... -gocheck.v
   - go test -gocheck.b

@@ -4,10 +4,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
 )
 
 type ArrayInt struct {
@@ -17,7 +13,7 @@ type ArrayInt struct {
 func (ai *ArrayInt) Scan(value interface{}) error {
 	//fmt.Println("attempting to Scan:", value)
 	if value == nil {
-		return errors.New("cq: scan value is null")
+		return ErrScanOnNil
 	}
 
 	switch value.(type) {

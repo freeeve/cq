@@ -5,6 +5,7 @@ import (
 	"flag"
 	. "launchpad.net/gocheck"
 	"log"
+	//"testing"
 )
 
 type ConnSuite struct{}
@@ -13,6 +14,10 @@ var (
 	_       = Suite(&ConnSuite{})
 	testURL = flag.String("testdb", "http://localhost:7474/", "the base url for the test db")
 )
+
+//func Test(t *testing.T) {
+//	TestingT(t)
+//}
 
 func openTest() driver.Conn {
 	db, err := Open(*testURL)

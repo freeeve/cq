@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"github.com/wfreeman/cq/types"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -23,12 +24,12 @@ type cypherStmt struct {
 }
 
 type cypherResult struct {
-	Columns         []string        `json:"columns"`
-	Data            [][]CypherValue `json:"data"`
-	ErrorMessage    string          `json:"message"`
-	ErrorException  string          `json:"exception"`
-	ErrorFullname   string          `json:"fullname"`
-	ErrorStacktrace []string        `json:"stacktrace"`
+	Columns         []string              `json:"columns"`
+	Data            [][]types.CypherValue `json:"data"`
+	ErrorMessage    string                `json:"message"`
+	ErrorException  string                `json:"exception"`
+	ErrorFullname   string                `json:"fullname"`
+	ErrorStacktrace []string              `json:"stacktrace"`
 }
 
 type cypherRequest struct {
@@ -125,4 +126,8 @@ func makeArgsMap(args []driver.Value) map[string]interface{} {
 		argsmap[strconv.Itoa(idx)] = e
 	}
 	return argsmap
+}
+
+func (cs cypherStmt) ColumnConverter(idx int) driver.ValueConverter {
+	return types.CypherValue{}
 }

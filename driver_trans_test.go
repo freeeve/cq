@@ -4,16 +4,11 @@ import (
 	_ "github.com/wfreeman/cq"
 	. "launchpad.net/gocheck"
 	"log"
-	"testing"
 	"time"
 )
 
 // This file is meant to hold integration tests where cq must be imported as _
 // and is for testing transactions. Some of these are going to be long tests...
-
-func Test(t *testing.T) {
-	TestingT(t)
-}
 
 type TransactionSuite struct{}
 

@@ -12,6 +12,10 @@ import (
 
 type CypherType uint8
 
+var (
+	ErrScanOnNil = errors.New("cq: scan value is null")
+)
+
 // supported types
 const (
 	CypherNull            CypherType = iota
@@ -169,7 +173,7 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 	switch rv.Kind() {
 	case reflect.Slice:
 		switch v.(type) {
-		case []int, []int64, []float64:
+		case []int, []int64, []float64, []string:
 			//fmt.Println("v is a slice:", v)
 			b, err := json.Marshal(v)
 			return string(b), err
@@ -195,8 +199,4 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 		return rv.Float(), nil
 	}
 	return nil, fmt.Errorf("unsupported type %T, a %s", v, rv.Kind())
-}
-
-func (cs cypherStmt) ColumnConverter(idx int) driver.ValueConverter {
-	return CypherValue{}
 }
