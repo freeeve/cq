@@ -1,5 +1,5 @@
 # cq - cypher queries for database/sql
-A database/sql implementation for Cypher. Still in development, but surprisingly already usable. 
+A database/sql implementation for Cypher. Still in development, but already surprisingly usable. 
 
 [![Build Status](https://travis-ci.org/wfreeman/cq.png?branch=master)](https://travis-ci.org/wfreeman/cq)
 [![Coverage Status](https://coveralls.io/repos/wfreeman/cq/badge.png?branch=HEAD)](https://coveralls.io/r/wfreeman/cq?branch=HEAD)
