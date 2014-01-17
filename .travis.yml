@@ -25,9 +25,9 @@ script:
   - go test ./types -covermode=count -coverprofile=typescov.out
   - go test -covermode=count -coverprofile=cov.out
   - go test -gocheck.b -covermode=count -coverprofile=bench.out
-  - tail -n +2 typescov.out >> cov.out
-  - tail -n +2 bench.out >> cov.out
+  - tail -n +2 typescov.out >> bench.out
+  - tail -n +2 cov.out >> bench.out
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - export PATH=$PATH:$HOME/gopath/bin/
-  - goveralls -coverprofile=cov.out rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
+  - goveralls -coverprofile=bench.out rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
