@@ -22,7 +22,9 @@ before_install:
   - neo4j-community-$NEO_VERSION/bin/neo4j start
 
 script:
-  - go test ./types -covermode=count -coverprofile=typescov.out
+  - cd types
+  - go test -covermode=count -coverprofile=../typescov.out
+  - cd ..
   - go test -covermode=count -coverprofile=cov.out
   - go test -gocheck.b -covermode=count -coverprofile=bench.out
   - tail -n +2 typescov.out >> bench.out
