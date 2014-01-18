@@ -8,7 +8,6 @@ import (
 )
 
 func (s *TypesSuite) TestQueryArrayStringParam(c *C) {
-	c.Skip("string array params not working yet")
 	stmt := prepareTest("with {0} as test return test")
 	rows, err := stmt.Query(types.ArrayString{[]string{"1", "2", "3"}})
 	c.Assert(err, IsNil)
@@ -21,7 +20,6 @@ func (s *TypesSuite) TestQueryArrayStringParam(c *C) {
 }
 
 func (s *TypesSuite) TestQueryStringArrayParam(c *C) {
-	c.Skip("string array params not working yet")
 	stmt := prepareTest("with {0} as test return test")
 	rows, err := stmt.Query([]string{"1", "2", "3"})
 	c.Assert(err, IsNil)

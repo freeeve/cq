@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"strconv"
 )
 
 type ArrayString struct {
@@ -12,14 +12,15 @@ type ArrayString struct {
 }
 
 func (as *ArrayString) Scan(value interface{}) error {
-	fmt.Println("attempting to Scan:", value)
 	if value == nil {
 		return ErrScanOnNil
 	}
 
 	switch value.(type) {
 	case string:
-		err := json.Unmarshal([]byte(value.(string)), &as.Val)
+		str := "\"" + value.(string) + "\""
+		str, err := strconv.Unquote(str)
+		err = json.Unmarshal([]byte(str), &as.Val)
 		return err
 	case []byte:
 		err := json.Unmarshal(value.([]byte), &as.Val)
@@ -30,6 +31,5 @@ func (as *ArrayString) Scan(value interface{}) error {
 
 func (as ArrayString) Value() (driver.Value, error) {
 	b, err := json.Marshal(as.Val)
-	fmt.Println("valued:", string(b))
 	return string(b), err
 }
