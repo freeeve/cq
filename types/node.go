@@ -3,7 +3,9 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Node struct {
@@ -26,8 +28,13 @@ func (n *Node) Scan(value interface{}) error {
 }
 
 func (n *Node) Labels() ([]string, error) {
+	fmt.Println("label: " + n.LabelURI)
 	resp, err := http.Get(n.LabelURI)
 	if err != nil {
+		// reasonable error until this is resolved
+		if strings.HasSuffix(err.Error(), "EOF") {
+			return nil, errors.New("Node.Labels() not supported over SSL")
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
