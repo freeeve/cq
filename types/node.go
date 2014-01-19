@@ -28,7 +28,7 @@ func (n *Node) Scan(value interface{}) error {
 }
 
 func (n *Node) Labels() ([]string, error) {
-	fmt.Println("label: " + n.LabelURI)
+	//fmt.Println("label: " + n.LabelURI)
 	resp, err := http.Get(n.LabelURI)
 	if err != nil {
 		// reasonable error until this is resolved
