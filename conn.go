@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 type cypherDriver struct{}
@@ -30,6 +31,8 @@ var (
 
 type conn struct {
 	baseURL        string
+	userInfo       *url.Userinfo
+	scheme         string
 	cypherURL      string
 	transactionURL string
 	transaction    *cypherTransaction
@@ -59,20 +62,39 @@ func Open(baseURL string) (driver.Conn, error) {
 	// TODO
 	// cache the results of this lookup
 	// add support for multiple hosts (cluster)
+	c := &conn{}
+	base, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, err
+	}
+	c.userInfo = base.User
+	c.scheme = base.Scheme
 	neoBase, err := getNeoBase(baseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	neoData, err := getNeoData(neoBase.Data)
+	dataURL, err := url.Parse(neoBase.Data)
+	if err != nil {
+		return nil, err
+	}
+	dataURL.User = base.User
+	dataURL.Scheme = base.Scheme
+
+	neoData, err := getNeoData(dataURL.String())
 	if err != nil {
 		return nil, err
 	}
 
-	c := &conn{}
-	c.cypherURL = neoData.Cypher
-	c.transactionURL = neoData.Transaction
+	cypherURL, err := url.Parse(neoData.Cypher)
+	cypherURL.User = base.User
+	cypherURL.Scheme = base.Scheme
+	c.cypherURL = cypherURL.String()
 
+	transURL, err := url.Parse(neoData.Transaction)
+	transURL.User = base.User
+	transURL.Scheme = base.Scheme
+	c.transactionURL = transURL.String()
 	return c, nil
 }
 

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -64,9 +65,23 @@ func (c *conn) Begin() (driver.Tx, error) {
 		log.Println(err, c)
 		err = nil
 	}
+	commitURL, err := url.Parse(transResponse.Commit)
+	if err != nil {
+		return nil, err
+	}
+	commitURL.Scheme = c.scheme
+	commitURL.User = c.userInfo
+
+	transactionURL, err := url.Parse(transResponse.location)
+	if err != nil {
+		return nil, err
+	}
+	transactionURL.Scheme = c.scheme
+	transactionURL.User = c.userInfo
+
 	c.transaction = &cypherTransaction{
-		commitURL:      transResponse.Commit,
-		transactionURL: transResponse.location,
+		commitURL:      commitURL.String(),
+		transactionURL: transactionURL.String(),
 		c:              c,
 		expiration:     exp,
 	}
