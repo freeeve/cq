@@ -22,14 +22,11 @@ before_install:
   - neo4j-community-$NEO_VERSION/bin/neo4j start
 
 script:
-  - cd types
-  - go test -covermode=count -coverprofile=../typescov.out
-  - cd ..
-  - go test -covermode=count -coverprofile=cov.out
-  - go test -gocheck.b -covermode=count -coverprofile=bench.out
-  - tail -n +2 typescov.out >> bench.out
-#  - tail -n +2 cov.out >> bench.out
+  - cd test
+  - go test -covermode=count -coverprofile=../cov.out
+#  - go test -gocheck.b -covermode=count -coverprofile=bench.out
+#  - tail -n +2 typescov.out >> bench.out
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - export PATH=$PATH:$HOME/gopath/bin/
-  - goveralls -coverprofile=bench.out rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
+  - goveralls -coverprofile=cov.out rgaztLT7pidhfXGLbQz3bMowiBeB1XJlS
