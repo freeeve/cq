@@ -1,4 +1,4 @@
-package cq_test
+package test
 
 import (
 	_ "github.com/wfreeman/cq"

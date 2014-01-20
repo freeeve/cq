@@ -1,10 +1,9 @@
-package cq_test
+package test
 
 import (
 	"database/sql"
 	. "launchpad.net/gocheck"
 	"log"
-	"testing"
 )
 
 // This file is meant to hold integration tests where cq must be imported
@@ -12,10 +11,6 @@ import (
 type DriverSuite struct{}
 
 var _ = Suite(&DriverSuite{})
-
-func Test(t *testing.T) {
-	TestingT(t)
-}
 
 func testConn() *sql.DB {
 	db, err := sql.Open("neo4j-cypher", "http://localhost:7474/")
