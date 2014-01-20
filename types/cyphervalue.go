@@ -172,12 +172,8 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
 	case reflect.Slice:
-		switch v.(type) {
-		case []int, []int64, []float64, []string:
-			//fmt.Println("v is a slice:", v)
-			b, err := json.Marshal(v)
-			return string(b), err
-		}
+		b, err := json.Marshal(v)
+		return string(b), err
 	case reflect.Ptr:
 		// indirect pointers
 		if rv.IsNil() {
