@@ -1,11 +1,11 @@
-package test
+package cq
 
 import (
 	"database/sql/driver"
 	"flag"
-	"github.com/wfreeman/cq"
 	. "launchpad.net/gocheck"
 	"log"
+	//"testing"
 )
 
 type ConnSuite struct{}
@@ -15,8 +15,12 @@ var (
 	testURL = flag.String("testdb", "http://localhost:7474/", "the base url for the test db")
 )
 
+//func Test(t *testing.T) {
+//	TestingT(t)
+//}
+
 func openTest() driver.Conn {
-	db, err := cq.Open(*testURL)
+	db, err := Open(*testURL)
 	if err != nil {
 		log.Println("can't connect to db.")
 		return nil
@@ -44,7 +48,7 @@ func (s *ConnSuite) TestPrepareNoParams(c *C) {
 }
 
 func (s *ConnSuite) TestBadURL(c *C) {
-	db, err := cq.Open("")
+	db, err := Open("")
 	if err == nil {
 		c.Fatal("err was nil!")
 	}

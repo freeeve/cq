@@ -1,4 +1,4 @@
-package test
+package cq_test
 
 import (
 	"fmt"

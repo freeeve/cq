@@ -1,9 +1,11 @@
-package test
+package types_test
 
 import (
+	"database/sql"
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
+	"log"
 	"testing"
 )
 
@@ -13,6 +15,32 @@ var _ = Suite(&TypesSuite{})
 
 func Test(t *testing.T) {
 	TestingT(t)
+}
+
+func testConn() *sql.DB {
+	db, err := sql.Open("neo4j-cypher", "http://localhost:7474/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
+}
+
+func prepareTest(query string) *sql.Stmt {
+	db := testConn()
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return stmt
+}
+
+func prepareAndQuery(query string) *sql.Rows {
+	stmt := prepareTest(query)
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return rows
 }
 
 func (s *TypesSuite) TestQueryCypherValueNull(c *C) {

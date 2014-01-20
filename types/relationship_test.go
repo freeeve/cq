@@ -1,4 +1,4 @@
-package test
+package types_test
 
 import (
 	_ "github.com/wfreeman/cq"
