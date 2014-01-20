@@ -1,17 +1,13 @@
 package test
 
 import (
-	"database/sql"
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
 )
 
 func (s *TypesSuite) TestQueryNode(c *C) {
-	conn, err := sql.Open("neo4j-cypher", "http://localhost:7474/")
-	c.Assert(err, IsNil)
-	stmt, err := conn.Prepare(`create (a:Test {foo:"bar", i:1}) return a`)
-	c.Assert(err, IsNil)
+	stmt := prepareTest(`create (a:Test {foo:"bar", i:1}) return a`)
 	rows, err := stmt.Query()
 	c.Assert(err, IsNil)
 
@@ -24,7 +20,7 @@ func (s *TypesSuite) TestQueryNode(c *C) {
 	t1.Properties["foo"] = types.CypherValue{"bar", types.CypherString}
 	t1.Properties["i"] = types.CypherValue{1, types.CypherInt}
 	c.Assert(test.Properties, DeepEquals, t1.Properties)
-	labels, err := test.Labels("http://localhost:7474/")
+	labels, err := test.Labels()
 	c.Assert(err, IsNil)
 	c.Assert(labels, DeepEquals, []string{"Test"})
 }

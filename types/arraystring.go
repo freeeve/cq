@@ -20,9 +20,6 @@ func (as *ArrayString) Scan(value interface{}) error {
 	case string:
 		str := "\"" + value.(string) + "\""
 		str, err := strconv.Unquote(str)
-		if err != nil {
-			return err
-		}
 		err = json.Unmarshal([]byte(str), &as.Val)
 		return err
 	case []byte:

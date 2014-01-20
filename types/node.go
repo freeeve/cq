@@ -4,12 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/url"
+	"strings"
 )
-
-type Conn interface {
-	BaseURL() string
-}
 
 type Node struct {
 	LabelURI   string                 `json:"labels"`
@@ -30,19 +26,14 @@ func (n *Node) Scan(value interface{}) error {
 	return errors.New("cq: invalid Scan value for Node")
 }
 
-func (n *Node) Labels(baseURL string) ([]string, error) {
-	base, err := url.Parse(baseURL)
-	if err != nil {
-		return nil, err
-	}
-	labelURL, err := url.Parse(n.LabelURI)
-	if err != nil {
-		return nil, err
-	}
-	labelURL.Scheme = base.Scheme
-	labelURL.User = base.User
+func (n *Node) Labels() ([]string, error) {
+	//fmt.Println("label: " + n.LabelURI)
 	resp, err := http.Get(n.LabelURI)
 	if err != nil {
+		// reasonable error until this is resolved
+		if strings.HasSuffix(err.Error(), "EOF") {
+			return nil, errors.New("Node.Labels() not supported over SSL")
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
