@@ -174,6 +174,9 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 	case reflect.Slice:
 		b, err := json.Marshal(v)
 		return string(b), err
+	case reflect.Map:
+		b, err := json.Marshal(v)
+		return string(b), err
 	case reflect.Ptr:
 		// indirect pointers
 		if rv.IsNil() {
