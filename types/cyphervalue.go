@@ -34,6 +34,7 @@ const (
 	CypherNode            CypherType = iota
 	CypherRelationship    CypherType = iota
 	CypherPath            CypherType = iota
+	CypherValueType       CypherType = iota
 )
 
 func (v *CypherValue) Scan(value interface{}) error {
@@ -102,7 +103,14 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 	if err == nil {
 		if m["Type"] != nil {
 			c.Val = m["Val"]
-			c.Type = m["Type"].(CypherType)
+			c.Type = CypherType(m["Type"].(float64))
+			switch c.Type {
+			case CypherInt:
+				// this is a horrible, horrible hack
+				// inserting to get tests to pass
+				// but will fix soon
+				c.Val = int(c.Val.(float64))
+			}
 			return nil
 		}
 	}
@@ -123,9 +131,18 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	if len(b) > 0 {
-		if b[0] == byte('"') {
+		switch b[0] {
+		case byte('"'):
 			c.Val = strings.Trim(str, "\"")
 			c.Type = CypherString
+			return nil
+		case byte('{'):
+			c.Val = b
+			c.Type = CypherValueType
+			return nil
+		case byte('['):
+			c.Val = b
+			c.Type = CypherArrayInt
 			return nil
 		}
 	}
@@ -145,7 +162,7 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	c.Val = b
-	c.Type = CypherArrayInt
+	c.Type = CypherValueType
 	//json.Unmarshal(b, &c.Val)
 	return nil
 }
