@@ -123,6 +123,15 @@ func (rs *rows) Next(dest []driver.Value) error {
 func makeArgsMap(args []driver.Value) map[string]interface{} {
 	argsmap := make(map[string]interface{})
 	for idx, e := range args {
+		switch e.(type) {
+		case []byte:
+			cv := types.CypherValue{}
+			err := json.Unmarshal(e.([]byte), &cv)
+			if err != nil {
+				argsmap[strconv.Itoa(idx)] = cv.Val
+				break
+			}
+		}
 		argsmap[strconv.Itoa(idx)] = e
 	}
 	return argsmap
