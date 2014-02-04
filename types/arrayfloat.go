@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 type ArrayFloat64 struct {
@@ -11,23 +12,25 @@ type ArrayFloat64 struct {
 }
 
 func (af *ArrayFloat64) Scan(value interface{}) error {
-	//fmt.Println("attempting to Scan:", value)
 	if value == nil {
 		return ErrScanOnNil
 	}
 
 	switch value.(type) {
-	case string:
-		err := json.Unmarshal([]byte(value.(string)), &af.Val)
-		return err
-	case []byte:
-		err := json.Unmarshal(value.([]byte), &af.Val)
-		return err
+	case []float64:
+		af.Val = value.([]float64)
+		return nil
+	case CypherValue:
+		cv := value.(CypherValue)
+		if cv.Type == CypherArrayFloat64 {
+			af.Val = cv.Val.([]float64)
+			return nil
+		}
 	}
-	return errors.New("cq: invalid Scan value for ArrayFloat")
+	return errors.New(fmt.Sprintf("cq: invalid Scan value for %T: %T", af, value))
 }
 
-func (ai ArrayFloat64) Value() (driver.Value, error) {
-	b, err := json.Marshal(ai.Val)
-	return string(b), err
+func (af ArrayFloat64) Value() (driver.Value, error) {
+	b, err := json.Marshal(CypherValue{CypherArrayFloat64, af.Val})
+	return b, err
 }

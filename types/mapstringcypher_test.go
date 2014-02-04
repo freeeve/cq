@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"errors"
+
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
@@ -68,7 +69,7 @@ func (s *TypesSuite) TestQueryBadMapStringCypherValue(c *C) {
 	rows.Next()
 	var test types.MapStringCypherValue
 	err := rows.Scan(&test)
-	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: invalid Scan value for MapStringCypherValue"))
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: invalid Scan value for *types.MapStringCypherValue: int"))
 }
 
 func (s *TypesSuite) TestQueryNullMapStringCypherValue(c *C) {

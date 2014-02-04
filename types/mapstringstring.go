@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"strconv"
+	"fmt"
 )
 
 type MapStringString struct {
@@ -17,22 +17,20 @@ func (mss *MapStringString) Scan(value interface{}) error {
 	}
 
 	switch value.(type) {
-	case string:
-		str := "\"" + value.(string) + "\""
-		str, err := strconv.Unquote(str)
-		if err != nil {
-			return err
+	case map[string]string:
+		mss.Val = value.(map[string]string)
+		return nil
+	case CypherValue:
+		cv := value.(CypherValue)
+		if cv.Type == CypherMapStringString {
+			mss.Val = cv.Val.(map[string]string)
+			return nil
 		}
-		err = json.Unmarshal([]byte(str), &mss.Val)
-		return err
-	case []byte:
-		err := json.Unmarshal(value.([]byte), &mss.Val)
-		return err
 	}
-	return errors.New("cq: invalid Scan value for ArrayInterface")
+	return errors.New(fmt.Sprintf("cq: invalid Scan value for %T: %T", mss, value))
 }
 
 func (mss MapStringString) Value() (driver.Value, error) {
-	b, err := json.Marshal(mss.Val)
-	return string(b), err
+	b, err := json.Marshal(CypherValue{CypherMapStringString, mss.Val})
+	return b, err
 }

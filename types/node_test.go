@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"database/sql"
+
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"

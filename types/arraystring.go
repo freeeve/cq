@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"strconv"
+	"fmt"
 )
 
 type ArrayString struct {
@@ -17,22 +17,20 @@ func (as *ArrayString) Scan(value interface{}) error {
 	}
 
 	switch value.(type) {
-	case string:
-		str := "\"" + value.(string) + "\""
-		str, err := strconv.Unquote(str)
-		if err != nil {
-			return err
+	case []string:
+		as.Val = value.([]string)
+		return nil
+	case CypherValue:
+		cv := value.(CypherValue)
+		if cv.Type == CypherArrayString {
+			as.Val = cv.Val.([]string)
+			return nil
 		}
-		err = json.Unmarshal([]byte(str), &as.Val)
-		return err
-	case []byte:
-		err := json.Unmarshal(value.([]byte), &as.Val)
-		return err
 	}
-	return errors.New("cq: invalid Scan value for ArrayString")
+	return errors.New(fmt.Sprintf("cq: invalid Scan value for %T: %T", as, value))
 }
 
 func (as ArrayString) Value() (driver.Value, error) {
-	b, err := json.Marshal(as.Val)
-	return string(b), err
+	b, err := json.Marshal(CypherValue{CypherArrayString, as.Val})
+	return b, err
 }

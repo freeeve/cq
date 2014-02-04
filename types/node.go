@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -23,11 +24,31 @@ func (n *Node) Scan(value interface{}) error {
 	}
 
 	switch value.(type) {
+	case map[string]CypherValue:
+		cv := value.(map[string]CypherValue)
+		var ok = false
+		var inner CypherValue
+		inner, ok = cv["data"]
+		if ok != true {
+			break
+		}
+		n.Properties = inner.Val.(map[string]CypherValue)
+		inner, ok = cv["self"]
+		if ok != true {
+			break
+		}
+		n.SelfURI = inner.Val.(string)
+		inner, ok = cv["labels"]
+		if ok != true {
+			break
+		}
+		n.LabelURI = inner.Val.(string)
+		return nil
 	case []byte:
 		err := json.Unmarshal(value.([]byte), &n)
 		return err
 	}
-	return errors.New("cq: invalid Scan value for Node")
+	return errors.New(fmt.Sprintf("cq: invalid Scan value for %T: %T", n, value))
 }
 
 func (n *Node) Labels(baseURL string) ([]string, error) {

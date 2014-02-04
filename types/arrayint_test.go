@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"errors"
+
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
@@ -45,7 +46,7 @@ func (s *TypesSuite) TestQueryBadIntArray(c *C) {
 	rows.Next()
 	var test types.ArrayInt
 	err := rows.Scan(&test)
-	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int"))
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: invalid Scan value for *types.ArrayInt: []types.CypherValue"))
 }
 
 func (s *TypesSuite) TestQueryNullIntArray(c *C) {
@@ -108,7 +109,7 @@ func (s *TypesSuite) TestQueryBadInt64Array(c *C) {
 	rows.Next()
 	var test types.ArrayInt64
 	err := rows.Scan(&test)
-	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int64"))
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: invalid Scan value for *types.ArrayInt64: []types.CypherValue"))
 }
 
 func (s *TypesSuite) TestQueryNullInt64Array(c *C) {
