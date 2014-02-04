@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"database/sql"
+
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
@@ -21,8 +22,8 @@ func (s *TypesSuite) TestQueryNode(c *C) {
 	c.Assert(err, IsNil)
 	t1 := types.Node{}
 	t1.Properties = map[string]types.CypherValue{}
-	t1.Properties["foo"] = types.CypherValue{"bar", types.CypherString}
-	t1.Properties["i"] = types.CypherValue{1, types.CypherInt}
+	t1.Properties["foo"] = types.CypherValue{types.CypherString, "bar"}
+	t1.Properties["i"] = types.CypherValue{types.CypherInt, 1}
 	c.Assert(test.Properties, DeepEquals, t1.Properties)
 	labels, err := test.Labels("http://localhost:7474/")
 	c.Assert(err, IsNil)

@@ -5,11 +5,12 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"github.com/wfreeman/cq/types"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/wfreeman/cq/types"
 )
 
 type rows struct {
@@ -86,7 +87,6 @@ func (stmt *cypherStmt) Query(args []driver.Value) (driver.Rows, error) {
 		return nil, err
 	}
 	cyphRes := cypherResult{}
-	//b, err := ioutil.ReadAll(res.Body)
 	err = json.NewDecoder(res.Body).Decode(&cyphRes)
 	io.Copy(ioutil.Discard, res.Body)
 	res.Body.Close()
@@ -123,6 +123,15 @@ func (rs *rows) Next(dest []driver.Value) error {
 func makeArgsMap(args []driver.Value) map[string]interface{} {
 	argsmap := make(map[string]interface{})
 	for idx, e := range args {
+		switch e.(type) {
+		case []byte:
+			cv := types.CypherValue{}
+			err := json.Unmarshal(e.([]byte), &cv)
+			if err == nil {
+				argsmap[strconv.Itoa(idx)] = cv.Val
+				continue
+			}
+		}
 		argsmap[strconv.Itoa(idx)] = e
 	}
 	return argsmap

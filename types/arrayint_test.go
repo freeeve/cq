@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"errors"
+
 	_ "github.com/wfreeman/cq"
 	"github.com/wfreeman/cq/types"
 	. "launchpad.net/gocheck"
@@ -45,7 +46,7 @@ func (s *TypesSuite) TestQueryBadIntArray(c *C) {
 	rows.Next()
 	var test types.ArrayInt
 	err := rows.Scan(&test)
-	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int"))
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: invalid Scan value for *types.ArrayInt: []types.CypherValue"))
 }
 
 func (s *TypesSuite) TestQueryNullIntArray(c *C) {
@@ -54,6 +55,20 @@ func (s *TypesSuite) TestQueryNullIntArray(c *C) {
 	var test types.ArrayInt
 	err := rows.Scan(&test)
 	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: scan value is null"))
+}
+
+func (s *TypesSuite) TestQueryIntArrayProperty(c *C) {
+	stmt := prepareTest("create (a:Test {prop:{0}}) return a.prop[0], a.prop[1], a.prop[2]")
+	rows, err := stmt.Query([]int{1, 2, 3})
+	c.Assert(err, IsNil)
+
+	rows.Next()
+	var test1, test2, test3 int
+	err = rows.Scan(&test1, &test2, &test3)
+	c.Assert(err, IsNil)
+	c.Assert(test1, Equals, 1)
+	c.Assert(test2, Equals, 2)
+	c.Assert(test3, Equals, 3)
 }
 
 func (s *TypesSuite) TestQueryArrayInt64Param(c *C) {
@@ -94,7 +109,7 @@ func (s *TypesSuite) TestQueryBadInt64Array(c *C) {
 	rows.Next()
 	var test types.ArrayInt64
 	err := rows.Scan(&test)
-	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: json: cannot unmarshal string into Go value of type int64"))
+	c.Assert(err, DeepEquals, errors.New("sql: Scan error on column index 0: cq: invalid Scan value for *types.ArrayInt64: []types.CypherValue"))
 }
 
 func (s *TypesSuite) TestQueryNullInt64Array(c *C) {

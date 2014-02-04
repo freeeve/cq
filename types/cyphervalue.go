@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -18,27 +19,27 @@ var (
 
 // supported types
 const (
-	CypherNull            CypherType = iota
-	CypherBoolean         CypherType = iota
-	CypherString          CypherType = iota
-	CypherInt64           CypherType = iota
-	CypherInt             CypherType = iota
-	CypherFloat64         CypherType = iota
-	CypherArrayInt        CypherType = iota
-	CypherArrayInt64      CypherType = iota
-	CypherArrayByte       CypherType = iota
-	CypherArrayFloat64    CypherType = iota
-	CypherArrayString     CypherType = iota
-	CypherArrayInterface  CypherType = iota
-	CypherMapStringString CypherType = iota
-	CypherNode            CypherType = iota
-	CypherRelationship    CypherType = iota
-	CypherPath            CypherType = iota
-	CypherValueType       CypherType = iota
+	CypherNull CypherType = iota
+	CypherBoolean
+	CypherString
+	CypherInt64
+	CypherInt
+	CypherFloat64
+	CypherArrayInt
+	CypherArrayInt64
+	CypherArrayByte
+	CypherArrayFloat64
+	CypherArrayString
+	CypherArrayCypherValue
+	CypherMapStringString
+	CypherMapStringCypherValue
+	CypherNode
+	CypherRelationship
+	CypherPath
+	CypherValueType
 )
 
 func (v *CypherValue) Scan(value interface{}) error {
-	//fmt.Println("attempting to Scan:", value)
 	if v == nil {
 		return ErrScanOnNil
 	}
@@ -66,55 +67,140 @@ func (v *CypherValue) Scan(value interface{}) error {
 		v.Type = CypherInt
 		v.Val = value
 		return nil
+	case []byte:
+		err := json.Unmarshal(value.([]byte), &v)
+		if err != nil {
+			return err
+		}
+	case []int:
+		v.Type = CypherArrayInt
+		v.Val = value.([]int)
+		return nil
+	case []string:
+		v.Type = CypherArrayString
+		v.Val = value.([]string)
+		return nil
 	}
 
-	err := json.Unmarshal(value.([]byte), &v)
-	if err != nil {
-		return err
-	}
-
-	switch v.Type {
-	case CypherArrayInt:
-		var ai ArrayInt
-		err = json.Unmarshal(value.([]byte), &ai.Val)
-		v.Val = ai.Val
-		return err
-	}
-	return err
+	return errors.New(fmt.Sprintf("cq: invalid Scan value for %T: %T", v, value))
 }
 
 type CypherValue struct {
-	Val  interface{}
 	Type CypherType
+	Val  interface{}
 }
 
-/*
 func (cv *CypherValue) Value() (driver.Value, error) {
-	fmt.Println(cv, "Value()")
-	fmt.Println(cv.Val)
+	fmt.Println("Value() cv:", cv)
+	switch cv.Type {
+	case CypherInt:
+		return cv.Val.(int), nil
+	case CypherFloat64:
+		return cv.Val.(float64), nil
+	}
 	b, err := json.Marshal(cv)
-	return string(b), err
-}*/
+	return b, err
+}
 
 func (c *CypherValue) UnmarshalJSON(b []byte) error {
-	//fmt.Println("attempting to unmarshal: ", string(b))
-	var m map[string]interface{}
-	err := json.Unmarshal(b, &m)
-	if err == nil {
-		if m["Type"] != nil {
-			c.Val = m["Val"]
-			c.Type = CypherType(m["Type"].(float64))
-			switch c.Type {
-			case CypherInt:
-				// this is a horrible, horrible hack
-				// inserting to get tests to pass
-				// but will fix soon
-				c.Val = int(c.Val.(float64))
+	if len(b) > 0 && bytes.HasPrefix(b, []byte("{\"Type\"")) {
+		start := bytes.Index(b, []byte(":"))
+		end := bytes.Index(b, []byte(","))
+		if start > 0 && end > 0 {
+			t, err := strconv.Atoi(string(b[start+1 : end]))
+			if err != nil {
+				return err
 			}
-			return nil
+			c.Type = CypherType(t)
+			switch c.Type {
+			case CypherString:
+				var s string
+				err := json.Unmarshal(b[end+7:len(b)-1], &s)
+				if err != nil {
+					return err
+				}
+				c.Val = s
+				return nil
+			case CypherFloat64:
+				var f float64
+				err := json.Unmarshal(b[end+7:len(b)-1], &f)
+				if err != nil {
+					return err
+				}
+				c.Val = f
+				return nil
+			case CypherInt64:
+				var i int64
+				err := json.Unmarshal(b[end+7:len(b)-1], &i)
+				if err != nil {
+					return err
+				}
+				c.Val = i
+				return nil
+			case CypherInt:
+				var i int
+				err := json.Unmarshal(b[end+7:len(b)-1], &i)
+				if err != nil {
+					return err
+				}
+				c.Val = i
+				return nil
+			case CypherArrayInt:
+				var ai = []int{}
+				err := json.Unmarshal(b[end+7:len(b)-1], &ai)
+				if err != nil {
+					return err
+				}
+				c.Val = ai
+				return nil
+			case CypherArrayInt64:
+				var ai = []int64{}
+				err := json.Unmarshal(b[end+7:len(b)-1], &ai)
+				if err != nil {
+					return err
+				}
+				c.Val = ai
+				return nil
+			case CypherArrayFloat64:
+				var af = []float64{}
+				err := json.Unmarshal(b[end+7:len(b)-1], &af)
+				if err != nil {
+					return err
+				}
+				c.Val = af
+				return nil
+			case CypherArrayString:
+				var as = []string{}
+				// need to refactor this to avoid hardcoding
+				err := json.Unmarshal(b[end+7:len(b)-1], &as)
+				if err != nil {
+					return err
+				}
+				c.Val = as
+				return nil
+			case CypherMapStringString:
+				var mss = map[string]string{}
+				// need to refactor this to avoid hardcoding
+				err := json.Unmarshal(b[end+7:len(b)-1], &mss)
+				if err != nil {
+					return err
+				}
+				c.Val = mss
+				return nil
+			case CypherMapStringCypherValue:
+				var msc = map[string]CypherValue{}
+				// need to refactor this to avoid hardcoding
+				err := json.Unmarshal(b[end+7:len(b)-1], &msc)
+				if err != nil {
+					return err
+				}
+				c.Val = msc
+				return nil
+			}
 		}
 	}
-	err = nil
+	//fmt.Println("parsing raw cypher value (unwrapped)...")
+	var err error
 	str := string(b)
 	switch str {
 	case "null":
@@ -137,12 +223,49 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 			c.Type = CypherString
 			return nil
 		case byte('{'):
-			c.Val = b
-			c.Type = CypherValueType
-			return nil
+			var mss = map[string]string{}
+			err = json.Unmarshal(b, &mss)
+			if err == nil {
+				c.Val = mss
+				c.Type = CypherMapStringString
+				return nil
+			}
+			var mscv = map[string]CypherValue{}
+			err = json.Unmarshal(b, &mscv)
+			if err == nil {
+				c.Val = mscv
+				c.Type = CypherMapStringCypherValue
+				return nil
+			}
 		case byte('['):
-			c.Val = b
-			c.Type = CypherArrayInt
+			var ai = []int{}
+			err = json.Unmarshal(b, &ai)
+			if err == nil {
+				c.Val = ai
+				c.Type = CypherArrayInt
+				return nil
+			}
+			var af = []float64{}
+			err = json.Unmarshal(b, &af)
+			if err == nil {
+				c.Val = af
+				c.Type = CypherArrayFloat64
+				return nil
+			}
+			var as = []string{}
+			err = json.Unmarshal(b, &as)
+			if err == nil {
+				c.Val = as
+				c.Type = CypherArrayString
+				return nil
+			}
+			var acv = []CypherValue{}
+			err = json.Unmarshal(b, &acv)
+			if err == nil {
+				c.Val = acv
+				c.Type = CypherArrayCypherValue
+				return nil
+			}
 			return nil
 		}
 	}
@@ -161,6 +284,13 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 		c.Type = CypherFloat64
 		return nil
 	}
+	ai := []int{}
+	err = json.Unmarshal(b, &ai)
+	if err == nil {
+		c.Val = ai
+		c.Type = CypherArrayInt
+		return nil
+	}
 	c.Val = b
 	c.Type = CypherValueType
 	//json.Unmarshal(b, &c.Val)
@@ -168,14 +298,11 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 }
 
 func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
-	//fmt.Println("attempting to convert:", v)
 	if driver.IsValue(v) {
-		//fmt.Println("IsValue")
 		return v, nil
 	}
 
 	if svi, ok := v.(driver.Valuer); ok {
-		//fmt.Println("we have a valuer:", v)
 		sv, err := svi.Value()
 		if err != nil {
 			return nil, err
@@ -189,11 +316,33 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
 	case reflect.Slice:
-		b, err := json.Marshal(v)
-		return string(b), err
+		b := CypherValue{}
+		switch v.(type) {
+		case []int:
+			b.Type = CypherArrayInt
+			b.Val = v
+		case []int64:
+			b.Type = CypherArrayInt64
+			b.Val = v
+		case []float64:
+			b.Type = CypherArrayFloat64
+			b.Val = v
+		case []string:
+			b.Type = CypherArrayString
+			b.Val = v
+		}
+		return b.Value()
 	case reflect.Map:
-		b, err := json.Marshal(v)
-		return string(b), err
+		b := CypherValue{}
+		switch v.(type) {
+		case map[string]string:
+			b.Type = CypherMapStringString
+			b.Val = v
+		case map[string]CypherValue:
+			b.Type = CypherMapStringCypherValue
+			b.Val = v
+		}
+		return b.Value()
 	case reflect.Ptr:
 		// indirect pointers
 		if rv.IsNil() {
