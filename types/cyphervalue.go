@@ -40,7 +40,6 @@ const (
 )
 
 func (v *CypherValue) Scan(value interface{}) error {
-	fmt.Println("attempting to Scan:", value)
 	if v == nil {
 		return ErrScanOnNil
 	}
@@ -92,12 +91,18 @@ type CypherValue struct {
 }
 
 func (cv *CypherValue) Value() (driver.Value, error) {
+	fmt.Println("Value() cv:", cv)
+	switch cv.Type {
+	case CypherInt:
+		return cv.Val.(int), nil
+	case CypherFloat64:
+		return cv.Val.(float64), nil
+	}
 	b, err := json.Marshal(cv)
 	return b, err
 }
 
 func (c *CypherValue) UnmarshalJSON(b []byte) error {
-	fmt.Println("attempting to unmarshal CV: ", string(b))
 	if len(b) > 0 && bytes.HasPrefix(b, []byte("{\"Type\"")) {
 		start := bytes.Index(b, []byte(":"))
 		end := bytes.Index(b, []byte(","))
@@ -261,7 +266,6 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 				c.Type = CypherArrayCypherValue
 				return nil
 			}
-			fmt.Println("went too far in []")
 			return nil
 		}
 	}
@@ -283,7 +287,6 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 	ai := []int{}
 	err = json.Unmarshal(b, &ai)
 	if err == nil {
-		fmt.Println("returning array int")
 		c.Val = ai
 		c.Type = CypherArrayInt
 		return nil
@@ -295,14 +298,11 @@ func (c *CypherValue) UnmarshalJSON(b []byte) error {
 }
 
 func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
-	fmt.Println("attempting to convert:", v)
 	if driver.IsValue(v) {
-		fmt.Println("IsValue:", v)
 		return v, nil
 	}
 
 	if svi, ok := v.(driver.Valuer); ok {
-		fmt.Println("we have a valuer:", v)
 		sv, err := svi.Value()
 		if err != nil {
 			return nil, err
@@ -350,6 +350,18 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 		} else {
 			return CypherValue{}.ConvertValue(rv.Elem().Interface())
 		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return rv.Int(), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		return int64(rv.Uint()), nil
+	case reflect.Uint64:
+		u64 := rv.Uint()
+		if u64 >= 1<<63 {
+			return nil, fmt.Errorf("uint64 values with high bit set are not supported")
+		}
+		return int64(u64), nil
+	case reflect.Float32, reflect.Float64:
+		return rv.Float(), nil
 	}
 	return nil, fmt.Errorf("unsupported type %T, a %s", v, rv.Kind())
 }
