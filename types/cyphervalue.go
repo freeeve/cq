@@ -91,7 +91,7 @@ type CypherValue struct {
 }
 
 func (cv *CypherValue) Value() (driver.Value, error) {
-	fmt.Println("Value() cv:", cv)
+	//fmt.Println("Value() cv:", cv)
 	switch cv.Type {
 	case CypherInt:
 		return cv.Val.(int), nil
