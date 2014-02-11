@@ -76,10 +76,9 @@ I've programmed the basic functionality of `Prepare()` and `Query()`, so you can
 * ~~tx: `stmt.Prepare()`~~
 * ~~tx: `stmt.Exec()`~~
 * ~~keepalive for transactions~~
-* support for array parameters and results via ValueConverter
-* support for map parameters and results via ValueConverter
+* ~~support for array parameters and results via ValueConverter~~
+* ~~support for map parameters and results via ValueConverter~~
 * tx: `stmt.Query()`
-* way to do named parameters
 
 ## transactional API
 The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. Currently only supports `stmt.Exec()` within a transaction, will work on supporting `stmt.Query()` next and queueing up results.
