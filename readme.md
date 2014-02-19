@@ -64,9 +64,6 @@ func main() {
 }
 ```
 
-## types subpackage
-TODO
-
 ## transactional API
 The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. Currently only supports `stmt.Exec()` within a transaction, will work on supporting `stmt.Query()` next and queueing up results.
 
@@ -112,6 +109,9 @@ BenchmarkTransactional1000SimpleCreate	 1000000	     27320 ns/op
 BenchmarkTransactional10000SimpleCreate	  500000	     28524 ns/op
 ok  	github.com/wfreeman/cq	79.973s
 ```
+
+## types subpackage
+TODO
 
 ## license
 
