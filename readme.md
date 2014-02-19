@@ -64,22 +64,8 @@ func main() {
 }
 ```
 
-## feature support
-I've programmed the basic functionality of `Prepare()` and `Query()`, so you can already get things done. Here is a list of features planned (crossed out items are complete):
-
-* ~~`sql.Open()`~~
-* ~~`db.Prepare()`~~
-* ~~`stmt.Exec()`~~
-* ~~`stmt.Query()`~~
-* ~~support for primitive parameters and results~~
-* ~~`db.Begin()`~~
-* ~~`tx.Prepare()`~~
-* ~~tx: `stmt.Prepare()`~~
-* ~~tx: `stmt.Exec()`~~
-* ~~keepalive for transactions~~
-* ~~support for array parameters and results via ValueConverter~~
-* ~~support for map parameters and results via ValueConverter~~
-* tx: `stmt.Query()`
+## types subpackage
+TODO
 
 ## transactional API
 The transactional API using `db.Begin()` is optimized for sending many queries to the [transactional Cypher endpoint](http://docs.neo4j.org/chunked/milestone/rest-api-transactional.html), in that it will batch them up and send them in chunks by default. Currently only supports `stmt.Exec()` within a transaction, will work on supporting `stmt.Query()` next and queueing up results.
