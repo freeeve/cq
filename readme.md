@@ -109,17 +109,17 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 | `int`						| yes						| use go `int`					| CTInteger					|
 | `int64`					| yes						| use go `int64`				| CTInteger					|
 | `float64`					| yes						| use go `float64`			| CTFloat					|
-| `types/Node`				| no						| `Node`							| CTNode						|
-| `types/Relationship`	| no						| `Relationship`				| CTRelationship			|
-| `types/CypherValue`	| yes						| `CypherValue`				| CTAny			|
+| `types.Node`				| no						| `Node`							| CTNode						|
+| `types.Relationship`	| no						| `Relationship`				| CTRelationship			|
+| `types.CypherValue`	| yes						| `CypherValue`				| CTAny			|
 | N/A							| no						| not implemented				| CTPath						|
 | `[]string`				| yes						| `ArrayString`				| CTCollection(CTString)|
 | `[]int`					| yes						| `ArrayInt`					| CTCollection(CTInteger)|
 | `[]int64`					| yes						| `ArrayInt64`					| CTCollection(CTInteger)|
 | `[]float64`				| yes						| `ArrayFloat64`				| CTCollection(CTFloat)	|
-| `[]types/CypherValue`	| yes						| `ArrayCypherValue`			| CTCollection(CTAny)	|
+| `[]types.CypherValue`	| yes						| `ArrayCypherValue`			| CTCollection(CTAny)	|
 | `map[string]string`	| yes						| `MapStringString`			| CTMap(CTString)			|
-| `map[string]types/CypherValue`| yes			| `MapStringCypherValue`	| CTMap(CTAny)				|
+| `map[string]types.CypherValue`| yes			| `MapStringCypherValue`	| CTMap(CTAny)				|
 
 #### transactional API benchmarks
 Able to get sustained times of 20k+ cypher statements per second, even with multiple nodes per create... on a 2011 vintage macbook.
