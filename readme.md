@@ -116,9 +116,9 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 | `[]string`				| yes						| `ArrayString`				| CTCollection(CTString)|
 | `[]int`					| yes						| `ArrayInt`					| CTCollection(CTInteger)|
 | `[]int64`					| yes						| `ArrayInt64`					| CTCollection(CTInteger)|
-| `[]float64`				| yes						| `ArrayFloat64				| CTCollection(CTFloat)	|
+| `[]float64`				| yes						| `ArrayFloat64`				| CTCollection(CTFloat)	|
 | `[]types/CypherValue`	| no						| `ArrayCypherValue`			| CTCollection(CTAny)	|
-| `map[string]string`	| yes						| `MapStringString			| CTMap(CTString)			|
+| `map[string]string`	| yes						| `MapStringString`			| CTMap(CTString)			|
 | `map[string]types/CypherValue`| yes			| `MapStringCypherValue`	| CTMap(CTAny)				|
 
 #### transactional API benchmarks
