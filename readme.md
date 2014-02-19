@@ -10,6 +10,7 @@ Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpai
 #### Other Go drivers for Neo4j that support Cypher
 * [Neoism](https://github.com/jmcvetta/neoism) (a careful/complete REST API implementation)
 * [GonormCypher](https://github.com/marpaia/GonormCypher) (a port of AnormCypher, to get up and running quickly)
+* [neo4j-go](https://github.com/jakewins/neo4j-go) (Jake's experimental Cypher driver)
 
 ## usage
 See the [excellent database/sql tutorial](http://go-database-sql.org/index.html) from [VividCortex](https://vividcortex.com/), as well as the [package documentation for database/sql](http://golang.org/pkg/database/sql/) for an introduction to the idiomatic go database access.
