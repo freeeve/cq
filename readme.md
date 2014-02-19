@@ -97,6 +97,30 @@ func main() {
 }
 ```
 
+## types subpackage
+
+database/sql out of the box doesn't implement many types to pass in as parameters or Scan() out of rows. Custom Cypher types are implemented in the `cq/types` subpackage. These custom types allow users of cq to `Scan()` types out of results, as well as pass types in as parameters.
+
+| Go type			| Can be <br/>query parameter?	| cq wrapper, for Scan	| Cypher type	|
+|:------------------ |:------------------:|:--------------------- | --------------------- |
+| `nil`						| yes						| `CypherValue`				| CTNull						|
+| `bool`						| yes						| use go `bool`				| CTBoolean					|
+| `string`					| yes						| use go `string`				| CTString					|
+| `int`						| yes						| use go `int`					| CTInteger					|
+| `int64`					| yes						| use go `int64`				| CTInteger					|
+| `float64`					| yes						| use go `float64`			| CTFloat					|
+| `types/Node`				| no						| `Node`							| CTNode						|
+| `types/Relationship`	| no						| `Relationship`				| CTRelationship			|
+| `types/CypherValue`	| no						| `CypherValue`				| CTAny			|
+| N/A							| no						| not implemented				| CTPath						|
+| `[]string`				| yes						| `ArrayString`				| CTCollection(CTString)|
+| `[]int`					| yes						| `ArrayInt`					| CTCollection(CTInteger)|
+| `[]int64`					| yes						| `ArrayInt64`					| CTCollection(CTInteger)|
+| `[]float64`				| yes						| `ArrayFloat64				| CTCollection(CTFloat)	|
+| `[]types/CypherValue`	| no						| `ArrayCypherValue`			| CTCollection(CTAny)	|
+| `map[string]string`	| yes						| `MapStringString			| CTMap(CTString)			|
+| `map[string]types/CypherValue`| yes			| `MapStringCypherValue`	| CTMap(CTAny)				|
+
 #### transactional API benchmarks
 Able to get sustained times of 20k+ cypher statements per second, even with multiple nodes per create... on a 2011 vintage macbook.
 
@@ -109,9 +133,6 @@ BenchmarkTransactional1000SimpleCreate	 1000000	     27320 ns/op
 BenchmarkTransactional10000SimpleCreate	  500000	     28524 ns/op
 ok  	github.com/wfreeman/cq	79.973s
 ```
-
-## types subpackage
-TODO
 
 ## license
 

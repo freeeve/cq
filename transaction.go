@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-const (
-	transactionNotStarted = iota
-	transactionStarted    = iota
-)
-
 type transactionResponse struct {
 	Commit      string `json:"commit"`
 	Transaction struct {
