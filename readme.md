@@ -103,23 +103,23 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 
 | Go type			| Can be <br/>query parameter?	| cq wrapper, for Scan	| CypherType uint8 |
 |:------------------ |:------------------:|:--------------------- | --------------------- |
-| `nil`						| yes						| `CypherValueType`				| CypherNull						|
-| `bool`						| yes						| use go `bool`				| CypherBoolean					|
-| `string`					| yes						| use go `string`				| CypherString					|
-| `int`						| yes						| use go `int`					| CypherInt					|
-| `int64`					| yes						| use go `int64`				| CypherInt64					|
-| `float64`					| yes						| use go `float64`			| CypherFloat64					|
-| `types.Node`				| no						| `Node`							| CypherNode						|
-| `types.Relationship`	| no						| `Relationship`				| CypherRelationship			|
-| `types.CypherValue`	| yes						| `CypherValue`				| CypherValueType			|
-| N/A							| no						| not implemented				| CypherPath						|
-| `[]string`				| yes						| `ArrayString`				| CTCollection(CTString)|
-| `[]int`					| yes						| `ArrayInt`					| CypherArrayInt |
-| `[]int64`					| yes						| `ArrayInt64`					| CypherArrayInt64 |
-| `[]float64`				| yes						| `ArrayFloat64`				| CypherArrayFloat64	|
-| `[]types.CypherValue`	| yes						| `ArrayCypherValue`			| CypherArrayCypherValue	|
-| `map[string]string`	| yes						| `MapStringString`			| CypherMapStringString			|
-| `map[string]types.CypherValue`| yes			| `MapStringCypherValue`	| CypherMapStringCypherValue				|
+| `nil`						| yes						| `CypherValueType`				| `CypherNull`						|
+| `bool`						| yes						| use go `bool`				| `CypherBoolean`					|
+| `string`					| yes						| use go `string`				| `CypherString`					|
+| `int`						| yes						| use go `int`					| `CypherInt`					|
+| `int64`					| yes						| use go `int64`				| `CypherInt64`					|
+| `float64`					| yes						| use go `float64`			| `CypherFloat64`					|
+| `types.Node`				| no						| `Node`							| `CypherNode`						|
+| `types.Relationship`	| no						| `Relationship`				| `CypherRelationship`			|
+| `types.CypherValue`	| yes						| `CypherValue`				| `CypherValueType`			|
+| N/A							| no						| not implemented				| `CypherPath`						|
+| `[]string`				| yes						| `ArrayString`				| `CypherArrayString` |
+| `[]int`					| yes						| `ArrayInt`					| `CypherArrayInt` |
+| `[]int64`					| yes						| `ArrayInt64`					| `CypherArrayInt64` |
+| `[]float64`				| yes						| `ArrayFloat64`				| `CypherArrayFloat64`	|
+| `[]types.CypherValue`	| yes						| `ArrayCypherValue`			| `CypherArrayCypherValue`	|
+| `map[string]string`	| yes						| `MapStringString`			| `CypherMapStringString`			|
+| `map[string]types.CypherValue`| yes			| `MapStringCypherValue`	| `CypherMapStringCypherValue`				|
 
 #### transactional API benchmarks
 Able to get sustained times of 20k+ cypher statements per second, even with multiple nodes per create... on a 2011 vintage macbook.
