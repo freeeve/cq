@@ -164,7 +164,7 @@ func txSizeSimpleMerge(c *C, size int) {
 				c.Assert(err, IsNil)
 
 				stmt.Close()
-				stmt, err = tx.Prepare("create ({`benchmark~test~id`:{0}})")
+				stmt, err = tx.Prepare("merge (:Test {`benchmark~test~id`:{0}})")
 				c.Assert(err, IsNil)
 			}
 		}
