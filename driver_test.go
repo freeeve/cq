@@ -2,9 +2,9 @@ package cq_test
 
 import (
 	"database/sql"
-	. "launchpad.net/gocheck"
 	"log"
 	"testing"
+	. "launchpad.net/gocheck"
 )
 
 // This file is meant to hold integration tests where cq must be imported
@@ -210,6 +210,15 @@ func (s *DriverSuite) TestScanBigInt64(c *C) {
 	err := rows.Scan(&i64)
 	c.Assert(err, IsNil)
 	c.Assert(i64, Equals, int64(123456789101112))
+}
+
+func (s *DriverSuite) TestScanBigInt64FloatBug(c *C) {
+	rows := prepareAndQuery("return 23371710262672408")
+	rows.Next()
+	var i64 int64
+	err := rows.Scan(&i64)
+	c.Assert(err, IsNil)
+	c.Assert(i64, Equals, int64(23371710262672408))
 }
 
 func (s *DriverSuite) TestExecNilRows(c *C) {
