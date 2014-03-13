@@ -103,7 +103,7 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 
 | Go type			| Can be <br/>query parameter?	| cq wrapper, for Scan	| CypherType uint8 |
 |:------------------ |:------------------:|:--------------------- | --------------------- |
-| `nil`						| yes						| `CypherValueType`				| `CypherNull`						|
+| `nil`						| yes						| `CypherValue`				| `CypherNull`						|
 | `bool`						| yes						| use go `bool`				| `CypherBoolean`					|
 | `string`					| yes						| use go `string`				| `CypherString`					|
 | `int`						| yes						| use go `int`					| `CypherInt`					|
