@@ -14,7 +14,7 @@ func (s *TypesSuite) TestScanTime(c *C) {
 	c.Assert(err, IsNil)
 
 	rows.Next()
-	var test types.CypherTime
+	var test types.NullTime
 	err = rows.Scan(&test)
 	c.Assert(err, IsNil)
 	c.Assert(test.Valid, Equals, true)
