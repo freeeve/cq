@@ -124,6 +124,9 @@ func (tx *cypherTransaction) exec() error {
 }
 
 func (tx *cypherTransaction) Commit() error {
+	if tx.Statements == nil {
+		return nil	
+	}
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(tx)
 	if err != nil {
