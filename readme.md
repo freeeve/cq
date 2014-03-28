@@ -109,7 +109,8 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 | `int`						| yes						| use go `int`					| `CypherInt`					|
 | `int64`					| yes						| use go `int64`				| `CypherInt64`					|
 | `float64`					| yes						| use go `float64`			| `CypherFloat64`					|
-| `types.Node`				| no						| `Node`							| `CypherNode`						|
+| `time.Time`					| yes						| use go `float64`			| `NullTime`					|
+| `types.Node`				| no						| `NullTime`							| `CypherNode`						|
 | `types.Relationship`	| no						| `Relationship`				| `CypherRelationship`			|
 | `types.CypherValue`	| yes						| `CypherValue`				| `CypherValueType`			|
 | N/A							| no						| not implemented				| `CypherPath`						|
