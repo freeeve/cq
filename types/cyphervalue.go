@@ -347,9 +347,8 @@ func (cv CypherValue) ConvertValue(v interface{}) (driver.Value, error) {
 		// indirect pointers
 		if rv.IsNil() {
 			return nil, nil
-		} else {
-			return CypherValue{}.ConvertValue(rv.Elem().Interface())
 		}
+		return CypherValue{}.ConvertValue(rv.Elem().Interface())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return rv.Int(), nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
