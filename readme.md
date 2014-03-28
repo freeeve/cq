@@ -103,7 +103,7 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 
 | Go type			| Can be <br/>query parameter?	| cq wrapper, for Scan	| CypherType uint8 |
 |:------------------ |:------------------:|:--------------------- | --------------------- |
-| `nil`						| yes						| `CypherValueType`				| `CypherNull`						|
+| `nil`						| yes						| `CypherValue`				| `CypherNull`						|
 | `bool`						| yes						| use go `bool`				| `CypherBoolean`					|
 | `string`					| yes						| use go `string`				| `CypherString`					|
 | `int`						| yes						| use go `int`					| `CypherInt`					|
@@ -121,7 +121,7 @@ database/sql out of the box doesn't implement many types to pass in as parameter
 | `map[string]string`	| yes						| `MapStringString`			| `CypherMapStringString`			|
 | `map[string]types.CypherValue`| yes			| `MapStringCypherValue`	| `CypherMapStringCypherValue`				|
 
-#### transactional API benchmarks
+## transactional API benchmarks
 Able to get sustained times of 20k+ cypher statements per second, even with multiple nodes per create... on a 2011 vintage macbook.
 
 ```
