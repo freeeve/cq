@@ -1,7 +1,7 @@
 # cq - cypher queries for database/sql
 A database/sql implementation for Cypher. Still in development, but already surprisingly usable. 
 
-If you'd like to use the new gopkg.in semantic versioning system, I'm going to keep cq in v0.x for a bit longer until I firm up a few things in the API, so you can import with:
+If you'd like to use the new [gopkg.in](http://godoc.org/gopkg.in/docs.v1) semantic versioning system, I'm going to keep cq in v0.x for a bit longer until I firm up a few things in the API, so you can import with:
 
 ```go
 import "gopkg.in/wfreeman/cq.v0"
