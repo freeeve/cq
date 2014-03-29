@@ -1,6 +1,12 @@
 # cq - cypher queries for database/sql
 A database/sql implementation for Cypher. Still in development, but already surprisingly usable. 
 
+If you'd like to use the new gopkg.in semantic versioning systme, I'm going to keep cq in v0.x for a bit longer, so you can import with:
+
+```go
+import "gopkg.in/wfreeman/cq.v0"
+```
+
 [![Build Status](https://travis-ci.org/wfreeman/cq.png?branch=master)](https://travis-ci.org/wfreeman/cq)
 [![Coverage Status](https://coveralls.io/repos/wfreeman/cq/badge.png?branch=HEAD)](https://coveralls.io/r/wfreeman/cq?branch=HEAD)
 [![Waffle](https://badge.waffle.io/wfreeman/cq.png?label=ready)](https://waffle.io/wfreeman/cq)
@@ -26,7 +32,7 @@ import (
 	"database/sql"
 	"log"
 	
-	_ "github.com/wfreeman/cq"
+	_ "gopkg.in/wfreeman/cq.v0"
 )
 
 func main() {
@@ -99,7 +105,7 @@ func main() {
 
 ## types subpackage
 
-database/sql out of the box doesn't implement many types to pass in as parameters or Scan() out of rows. Custom Cypher types are implemented in the `cq/types` subpackage. These custom types allow users of cq to `Scan()` types out of results, as well as pass types in as parameters.
+database/sql out of the box doesn't implement many types to pass in as parameters or Scan() out of rows. Custom Cypher types are implemented in the `cq/types` subpackage (`import "gopkg.in/wfreeman/cq.v0/types"`). These custom types allow users of cq to `Scan()` types out of results, as well as pass types in as parameters.
 
 | Go type			| Can be <br/>query parameter?	| cq wrapper, for Scan	| CypherType uint8 |
 |:------------------ |:------------------:|:--------------------- | --------------------- |
