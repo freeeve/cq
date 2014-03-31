@@ -1,5 +1,5 @@
 # cq - cypher queries for database/sql
-A database/sql implementation for Cypher. Still in development, but already surprisingly usable. 
+A database/sql implementation for Cypher. Still in development (v0.1.0 released), but already surprisingly usable. Plan to release v1.0.0 soon, but will break some APIs (namely Node getting labels) when I do. Also, I plan to drop support for 1.9, in order to use the transactional cypher endpoint for all operations.
 
 If you'd like to use the new [gopkg.in](http://godoc.org/gopkg.in/docs.v1) semantic versioning system, I'm going to keep cq in v0.x for a bit longer until I firm up a few things in the API, so you can import with:
 
