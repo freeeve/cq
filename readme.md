@@ -21,7 +21,7 @@ Thanks to [Baron](http://twitter.com/xaprb), [Mike](http://twitter.com/mikearpai
 ## usage
 See the [excellent database/sql tutorial](http://go-database-sql.org/index.html) from [VividCortex](https://vividcortex.com/), as well as the [package documentation for database/sql](http://golang.org/pkg/database/sql/) for an introduction to the idiomatic go database access.
 
-One key thing to mention that's slightly different, at least so far. For now, you can (and should) use parameters, but the placeholders must be numbers in sequence, e.g. `{0}`, `{1}`, `{2}`, and then you must put them in order in the calls to `Query`/`Exec`. I hope to overcome this at some point, but I haven't figured out a good way to represent Cypher's named parameters in the parameterized query feature of database/sql.
+You can (and should) use parameters, but the placeholders must be numbers in sequence, e.g. `{0}`, `{1}`, `{2}`, and then you must put them in order in the calls to `Query`/`Exec`. If you'd like to use named parameters, you can use the [sqlx](https://github.com/jmoiron/sqlx) library along with cq. Please let me know if any issues arise from using sqlx with cq--it is not thoroughly tested.
 
 ## [minimum viable snippet](http://blog.fogus.me/2012/08/23/minimum-viable-snippet/)
 
