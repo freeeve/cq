@@ -141,6 +141,13 @@ BenchmarkTransactional10000SimpleCreate	  500000	     28524 ns/op
 ok  	github.com/wfreeman/cq	79.973s
 ```
 
+## Deployment on Heroku
+
+There is a repo with a template app for Heroku [here](https://github.com/wfreeman/cq-example).
+Use this Heroku deploy button to push the template project on to a new app on your Heroku account.
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/wfreeman/cq-example)
+
 ## thanks
 Thanks to issue reporters and [contributors](https://github.com/wfreeman/cq/graphs/contributors)!
 
